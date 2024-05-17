@@ -14,31 +14,29 @@
  *  - steroids: 3 seconds to break 1 border or body (not instant).
  */
 
-
-
-
 #include <iostream>
 #include <thread>
 #include <chrono>
+#include "include/Border.hpp"
+#include "include/Snake.hpp"
+
+#include <cstdio>
+#include <termios.h>
+#include <unistd.h>
 
 int main() {
     std::cout << "Hello, World!" << std::endl;
 
     //create border
+    Border border(CoordinateStructures::Size{10, 10});
 
     //create snake
+    Snake snake(border.getCenter());
 
-
+    //create input
+    KeyboardInput keyboardInput;
 
     //create food thread
-    int inputMove;
-    while (true) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(300));
-
-        int ch = getchar();
-        std::cout << "ch: " << ch << std::endl;
-    }
-
 
 
     return 0;
