@@ -13,7 +13,12 @@ namespace CoordinateStructures {
     };
 
     enum Direction {
-        Up, Down, Left, Right
+        UP, DOWN, LEFT, RIGHT
+    };
+
+    struct Steps {
+        int rows;
+        int cols;
     };
 
 }

@@ -1,19 +1,25 @@
 #ifndef SNAKE_SNAKE_HPP
 #define SNAKE_SNAKE_HPP
 
+#include <queue>
 #include "CoordinateStructures.hpp"
 
 class Snake {
 
 public:
-    explicit Snake(CoordinateStructures::Pixel coords);
+    explicit Snake(CoordinateStructures::Pixel coords, const CoordinateStructures::Steps &steps);
 
     void move(CoordinateStructures::Direction direction);
+
+    [[nodiscard]] inline CoordinateStructures::Pixel &getHeadPosition() { return headPosition; }
+
+    [[nodiscard]] inline std::deque<CoordinateStructures::Pixel> &getBody() { return body; }
 
 
 private:
     CoordinateStructures::Pixel headPosition;
-    CoordinateStructures::Direction direction;
+    std::deque<CoordinateStructures::Pixel> body;
+    CoordinateStructures::Direction direction = CoordinateStructures::Direction::RIGHT;
 
 };
 
