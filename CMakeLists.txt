@@ -3,15 +3,22 @@ project(snake)
 
 set(CMAKE_CXX_STANDARD 17)
 
+find_package(OpenCV REQUIRED)
+
 set(SOURCE_FILES
-        src/Border.cpp
+        src/Map.cpp
         src/Snake.cpp
-        src/Consumables.cpp)
+        src/Consumables.cpp
+        main.cpp)
 
 # Create a library target named 'snake_lib' from the source files
 add_library(snake_lib ${SOURCE_FILES})
 
-add_executable(${PROJECT_NAME} main.cpp)
+include_directories(${OpenCV_INCLUDE_DIRS})
+
+add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 
 # Link the 'snake_lib' library to the 'snake' executable
-target_link_libraries(snake snake_lib)
+target_link_libraries(${PROJECT_NAME} snake_lib ${OpenCV_LIBS})
+
+target_include_directories(${PROJECT_NAME} PUBLIC ${OpenCV_INCLUDE_DIRS})

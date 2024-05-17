@@ -17,7 +17,7 @@
 #include <iostream>
 #include <thread>
 #include <chrono>
-#include "include/Border.hpp"
+#include "include/Map.hpp"
 #include "include/Snake.hpp"
 
 #include <cstdio>
@@ -28,13 +28,10 @@ int main() {
     std::cout << "Hello, World!" << std::endl;
 
     //create border
-    Border border(CoordinateStructures::Size{10, 10});
+    Map border(CoordinateStructures::Size{10, 10});
 
     //create snake
     Snake snake(border.getCenter());
-
-    //create input
-    KeyboardInput keyboardInput;
 
     //create food thread
 
