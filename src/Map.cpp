@@ -4,11 +4,43 @@
 #include <iostream>
 #include "../include/Snake.hpp"
 
-Map::Map(CoordinateStructures::Size dimension) : map(cv::Mat::zeros(dimension.height, dimension.width, CV_8UC3)) {
+Map::Map(CoordinateStructures::Size dimension, const Map::OnDirectionChange& onDirectionChange) : map(cv::Mat::zeros(
+        dimension.height, dimension.width, CV_8UC3)), onDirectionChange(onDirectionChange) {
     steps.cols = map.cols / 20;
     steps.rows = map.rows / 20;
 
     addBackground();
+    createBorder();
+
+    displayThread = std::thread([this, onDirectionChange]() {
+        while (true) {
+            cv::imshow("Map", map);
+            int key = cv::waitKey(1);
+            onKeyPressed(key);
+        }
+    });
+}
+
+void Map::onKeyPressed(int key) {
+    switch (key) {
+        case 27:
+            cv::destroyAllWindows();
+            break;
+        case 82:
+            onDirectionChange(CoordinateStructures::Direction::UP);
+            break;
+        case 84:
+            onDirectionChange(CoordinateStructures::Direction::DOWN);
+            break;
+        case 81:
+            onDirectionChange(CoordinateStructures::Direction::LEFT);
+            break;
+        case 83:
+            onDirectionChange(CoordinateStructures::Direction::RIGHT);
+            break;
+        default:
+            break;
+    }
 }
 
 CoordinateStructures::Pixel Map::getCenter() const {
@@ -44,6 +76,8 @@ void Map::createBorder() {
 }
 
 void Map::updateBorder() {
+    //add callback for border update;
+
     for (const auto &b: border)
         cv::line(map, cv::Point(b.first.x, b.first.y), cv::Point(b.second.x, b.second.y), cv::Scalar(0, 0, 255), 2);
 }
@@ -66,20 +100,14 @@ void Map::addBackground() {
     }
 }
 
-void Map::show() {
-    createBorder();
-
-    cv::imshow("Map", map);
-    cv::waitKey(0);
-    cv::destroyAllWindows();
-}
-
 void Map::fitToGrid(CoordinateStructures::Pixel &pixel) const {
     pixel.x = pixel.x - (pixel.x % steps.cols);
     pixel.y = pixel.y - (pixel.y % steps.rows);
 }
 
-void Map::addSnake(Snake& snake) {
+void Map::updateSnake(Snake &snake) {
+    addBackground();
+    updateBorder();
     auto head = snake.getHeadPosition();
     fitToGrid(head);
     cv::Point h1 = cv::Point{head.x + 2, head.y + 2};
@@ -91,5 +119,11 @@ void Map::addSnake(Snake& snake) {
         cv::Point b1 = cv::Point{b.x + 5, b.y + 5};
         cv::Point b2 = cv::Point{b.x + steps.cols - 6, b.y + steps.rows - 6};
         cv::rectangle(map, b1, b2, cv::Scalar(255, 0, 0), -1);
+    }
+}
+
+Map::~Map() noexcept {
+    if (displayThread.joinable()) {
+        displayThread.join();
     }
 }

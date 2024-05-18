@@ -14,21 +14,24 @@
  *  - steroids: 3 seconds to break 1 border or body (not instant).
  */
 
+#include <iostream>
 #include "include/Map.hpp"
 #include "include/Snake.hpp"
 
 int main() {
-    //create border
-    Map map(CoordinateStructures::Size{500, 500});
+    CoordinateStructures::Size mapSize = {500, 500};
+    CoordinateStructures::Steps steps = {mapSize.width / 20, mapSize.height / 20};
 
     //create snake
-    Snake snake(map.getCenter(), map.getSteps());
+    Snake snake({mapSize.width / 2, mapSize.height / 2}, steps);
 
-    map.addSnake(snake);
-    map.show();
+    //create border
+    Map map(mapSize, [&snake, &map](CoordinateStructures::Direction input) {
+        snake.move(input);
+        map.updateSnake(snake);
+    });
 
-    //create food thread
-
+    map.updateSnake(snake);
 
     return 0;
 }

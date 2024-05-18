@@ -19,6 +19,7 @@ public:
 private:
     CoordinateStructures::Pixel headPosition;
     std::deque<CoordinateStructures::Pixel> body;
+    CoordinateStructures::Steps steps;
     CoordinateStructures::Direction direction = CoordinateStructures::Direction::RIGHT;
 
 };
