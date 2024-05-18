@@ -15,6 +15,8 @@ public:
 
     [[nodiscard]] inline std::deque<CoordinateStructures::Pixel> &getBody() { return body; }
 
+private:
+    void checkCollision();
 
 private:
     CoordinateStructures::Pixel headPosition;

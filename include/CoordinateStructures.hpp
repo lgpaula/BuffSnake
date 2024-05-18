@@ -5,6 +5,10 @@ namespace CoordinateStructures {
     struct Pixel {
         int x;
         int y;
+
+        bool operator==(const Pixel& other) const {
+            return x == other.x && y == other.y;
+        }
     };
 
     struct Size {
