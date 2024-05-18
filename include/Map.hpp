@@ -30,6 +30,7 @@ private:
     void updateBorder();
     void fitToGrid(CoordinateStructures::Pixel &pixel) const;
     void onKeyPressed(int key);
+    void checkCollision(CoordinateStructures::Pixel &head) const;
 
 private:
     cv::Mat map;

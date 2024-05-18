@@ -120,6 +120,16 @@ void Map::updateSnake(Snake &snake) {
         cv::Point b2 = cv::Point{b.x + steps.cols - 6, b.y + steps.rows - 6};
         cv::rectangle(map, b1, b2, cv::Scalar(255, 0, 0), -1);
     }
+
+    checkCollision(head);
+}
+
+void Map::checkCollision(CoordinateStructures::Pixel &head) const {
+    if (head.x < 0 || head.x >= map.cols || head.y < 0 || head.y >= map.rows) {
+        std::cout << "Game Over!" << std::endl;
+        cv::destroyAllWindows();
+        //add callback for restart;
+    }
 }
 
 Map::~Map() noexcept {
