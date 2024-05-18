@@ -27,5 +27,15 @@ namespace CoordinateStructures {
 
 }
 
+namespace std {
+    template <>
+    struct hash<CoordinateStructures::Pixel> {
+        std::size_t operator()(const CoordinateStructures::Pixel& pixel) const noexcept {
+            std::size_t h1 = std::hash<int>{}(pixel.x);
+            std::size_t h2 = std::hash<int>{}(pixel.y);
+            return h1 ^ (h2 << 1); // Combine the two hash values
+        }
+    };
+}
 
 #endif //SNAKE_COORDINATESTRUCTURES_HPP

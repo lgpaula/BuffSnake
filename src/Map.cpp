@@ -4,8 +4,10 @@
 #include <iostream>
 #include "../include/Snake.hpp"
 
-Map::Map(CoordinateStructures::Size dimension, const Map::OnDirectionChange& onDirectionChange) : map(cv::Mat::zeros(
-        dimension.height, dimension.width, CV_8UC3)), onDirectionChange(onDirectionChange) {
+Map::Map(CoordinateStructures::Size dimension, const Map::OnDirectionChange &onDirectionChange,
+         const Map::OnConsumableEaten &consumableEaten) : map(cv::Mat::zeros(
+        dimension.height, dimension.width, CV_8UC3)), onDirectionChange(onDirectionChange),
+                                                          onConsumableEaten(consumableEaten) {
     steps.cols = map.cols / 20;
     steps.rows = map.rows / 20;
 
@@ -108,6 +110,8 @@ void Map::fitToGrid(CoordinateStructures::Pixel &pixel) const {
 void Map::updateSnake(Snake &snake) {
     addBackground();
     updateBorder();
+    updateConsumables();
+
     auto head = snake.getHeadPosition();
     fitToGrid(head);
     cv::Point h1 = cv::Point{head.x + 2, head.y + 2};
@@ -121,14 +125,65 @@ void Map::updateSnake(Snake &snake) {
         cv::rectangle(map, b1, b2, cv::Scalar(255, 0, 0), -1);
     }
 
-    checkCollision(head);
+    updateOccupiedSpaces(snake);
+    checkCollisionWithBorder(head);
+    checkCollisionWithConsumable(head);
 }
 
-void Map::checkCollision(CoordinateStructures::Pixel &head) const {
+void Map::updateConsumables() {
+    for (auto &c : consumables) {
+        cv::Point p1 = cv::Point{c.position.x + 2, c.position.y + 2};
+        cv::Point p2 = cv::Point{c.position.x + steps.cols - 3, c.position.y + steps.rows - 3};
+        cv::rectangle(map, p1, p2, cv::Scalar(0, 255, 0), -1);
+    }
+}
+
+void Map::updateOccupiedSpaces(Snake &snake) {
+    occupiedSpaces.clear();
+    occupiedSpaces.insert(snake.getHeadPosition());
+    for (const auto &b : snake.getBody()) occupiedSpaces.insert(b);
+    for (const auto &c : consumables) occupiedSpaces.insert(c.position);
+}
+
+void Map::checkCollisionWithConsumable(CoordinateStructures::Pixel &head) {
+    for (const auto &c : consumables) {
+        if (head.x == c.position.x && head.y == c.position.y) {
+            onConsumableEaten(c);
+            consumables.erase(c);
+        }
+    }
+}
+
+void Map::checkCollisionWithBorder(CoordinateStructures::Pixel &head) const {
     if (head.x < 0 || head.x >= map.cols || head.y < 0 || head.y >= map.rows) {
         std::cout << "Game Over!" << std::endl;
         cv::destroyAllWindows();
         //add callback for restart;
+    }
+}
+
+void Map::spawnConsumable(Food::Consumable consumable) {
+    setConsumablePosition(consumable);
+
+    occupiedSpaces.insert(consumable.position);
+
+    fitToGrid(consumable.position);
+    consumables.emplace_back(consumable);
+    cv::Point p1 = cv::Point{consumable.position.x + 2, consumable.position.y + 2};
+//    cv::Point p2 = cv::Point{consumable.position.x + steps.cols - 3, consumable.position.y + steps.rows - 3};
+//    cv::rectangle(map, p1, p2, cv::Scalar(0, 255, 0), -1);
+    cv::circle(map, p1, 5, cv::Scalar(0, 0, 255), -1);
+}
+
+void Map::setConsumablePosition(Food::Consumable &consumable) {
+    int x = rand() % map.cols;
+    int y = rand() % map.rows;
+
+    //check for collision
+    if (std::find(occupiedSpaces.begin(), occupiedSpaces.end(), CoordinateStructures::Pixel{x, y}) != occupiedSpaces.end()) {
+        setConsumablePosition(consumable);
+    } else {
+        consumable.position = {x, y};
     }
 }
 

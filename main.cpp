@@ -11,14 +11,17 @@
  *  - creatine: has 25% chance of not growing. points += 20
  *  - protein: points += 20
  *
- *  - steroids: 3 seconds to break 1 border or body (not instant).
+ *  - steroids: 3 seconds to break 1 border or body (triggered by user).
  */
 
 #include <iostream>
 #include "include/Map.hpp"
+#include "include/Game.hpp"
 #include "include/Snake.hpp"
 
 int main() {
+    Game game;
+
     CoordinateStructures::Size mapSize = {500, 500};
     CoordinateStructures::Steps steps = {mapSize.width / 20, mapSize.height / 20};
 
@@ -29,9 +32,14 @@ int main() {
     Map map(mapSize, [&snake, &map](CoordinateStructures::Direction input) {
         snake.move(input);
         map.updateSnake(snake);
+    }, [&game, &map](Food::Consumable consumable) {
+        game.addPoints(consumable.points);
+        map.spawnConsumable(consumable);
     });
 
     map.updateSnake(snake);
+    Food::Consumable consumable = Food::Consumable{Food::ConsumableType::CHICKEN};
+    map.spawnConsumable(consumable);
 
     return 0;
 }
