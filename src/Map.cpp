@@ -2,12 +2,13 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 #include <iostream>
+#include <utility>
 #include "../include/Snake.hpp"
 
 Map::Map(CoordinateStructures::Size dimension, const Map::OnDirectionChange &onDirectionChange,
-         const Map::OnConsumableEaten &consumableEaten) : map(cv::Mat::zeros(
+         Map::OnConsumableEaten consumableEaten) : map(cv::Mat::zeros(
         dimension.height, dimension.width, CV_8UC3)), onDirectionChange(onDirectionChange),
-                                                          onConsumableEaten(consumableEaten) {
+                                                          onConsumableEaten(std::move(consumableEaten)) {
     steps.cols = map.cols / 20;
     steps.rows = map.rows / 20;
 
@@ -78,8 +79,7 @@ void Map::createBorder() {
 }
 
 void Map::updateBorder() {
-    //add callback for border update;
-
+    //add callback for border update (when broken);
     for (const auto &b: border)
         cv::line(map, cv::Point(b.first.x, b.first.y), cv::Point(b.second.x, b.second.y), cv::Scalar(0, 0, 255), 2);
 }
@@ -145,15 +145,13 @@ void Map::updateOccupiedSpaces(Snake &snake) {
 }
 
 void Map::checkCollisionWithConsumable(CoordinateStructures::Pixel &head) {
-    Food::Consumable eaten{};
     for (const auto &c : consumables) {
         if (head.x == c.position.x && head.y == c.position.y) {
+            consumables.erase(c);
             onConsumableEaten(c);
-            eaten = c;
             break;
         }
     }
-    consumables.erase(eaten);
 }
 
 void Map::checkCollisionWithBorder(CoordinateStructures::Pixel &head) const {
@@ -171,7 +169,8 @@ void Map::spawnConsumable(Food::Consumable consumable) {
 
     fitToGrid(consumable.position);
     consumables.insert(consumable);
-    updateConsumables();
+    cv::Point p1 = cv::Point{consumable.position.x + (steps.cols / 2), consumable.position.y + (steps.rows / 2)};
+    cv::circle(map, p1, 5, cv::Scalar(0, 0, 255), -1);
 }
 
 void Map::setConsumablePosition(Food::Consumable &consumable) {
@@ -194,7 +193,5 @@ CoordinateStructures::Pixel Map::generatePosition() {
 }
 
 Map::~Map() noexcept {
-    if (displayThread.joinable()) {
-        displayThread.join();
-    }
+    if (displayThread.joinable()) displayThread.join();
 }

@@ -18,7 +18,7 @@ public:
     using OnDirectionChange = std::function<void(CoordinateStructures::Direction input)>;
     using OnConsumableEaten = std::function<void(Food::Consumable consumable)>;
 
-    Map(CoordinateStructures::Size dimension, const OnDirectionChange& onDirectionChange, const OnConsumableEaten& onConsumableEaten);
+    Map(CoordinateStructures::Size dimension, const OnDirectionChange& onDirectionChange, OnConsumableEaten  onConsumableEaten);
 
     [[nodiscard]] CoordinateStructures::Pixel getCenter() const;
 

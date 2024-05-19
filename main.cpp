@@ -32,9 +32,10 @@ int main() {
     Map map(mapSize, [&snake, &map](CoordinateStructures::Direction input) {
         snake.move(input);
         map.updateSnake(snake);
-    }, [&game, &map](Food::Consumable consumable) {
+    }, [&game, &map, &snake](Food::Consumable consumable) {
         game.addPoints(consumable.points);
         map.spawnConsumable(consumable);
+        snake.grow();
     });
 
     map.updateSnake(snake);

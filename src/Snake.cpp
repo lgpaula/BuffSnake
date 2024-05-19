@@ -6,8 +6,6 @@ Snake::Snake(CoordinateStructures::Pixel coords, const CoordinateStructures::Ste
         headPosition({coords.x, coords.y}), steps(steps) {
     body.push_front({headPosition.x - steps.cols, headPosition.y});
     body.push_front({body.front().x - steps.cols, headPosition.y});
-    body.push_front({body.front().x - steps.cols, headPosition.y});
-    body.push_front({body.front().x - steps.cols, headPosition.y});
 }
 
 void Snake::move(CoordinateStructures::Direction dir) {
@@ -36,6 +34,10 @@ void Snake::move(CoordinateStructures::Direction dir) {
     direction = dir;
 
     checkCollision();
+}
+
+void Snake::grow() {
+    body.push_front(body.front());
 }
 
 void Snake::checkCollision() {

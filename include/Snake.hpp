@@ -11,6 +11,8 @@ public:
 
     void move(CoordinateStructures::Direction direction);
 
+    void grow();
+
     [[nodiscard]] inline CoordinateStructures::Pixel &getHeadPosition() { return headPosition; }
 
     [[nodiscard]] inline std::deque<CoordinateStructures::Pixel> &getBody() { return body; }
