@@ -189,6 +189,7 @@ CoordinateStructures::Pixel Map::generatePosition() {
 
     CoordinateStructures::Pixel pos = {x(engine), y(engine)};
 
+    fitToGrid(pos);
     return pos;
 }
 
