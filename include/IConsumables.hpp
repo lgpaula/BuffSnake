@@ -13,13 +13,15 @@ namespace Food {
     };
 
     struct Consumable {
-        Consumable(ConsumableType type) : type(type) {
+        Consumable() = default;
+
+        explicit Consumable(ConsumableType type) : type(type) {
             setPoints();
         }
 
-        ConsumableType type;
-        CoordinateStructures::Pixel position;
-        int points;
+        ConsumableType type{};
+        CoordinateStructures::Pixel position{};
+        int points{};
         bool isCurrentlySpawned = false;
 //        Icon icon;
 
@@ -40,10 +42,32 @@ namespace Food {
             }
         }
 
-
+        bool operator==(const Consumable& other) const {
+            return type == other.type &&
+                   position == other.position &&
+                   points == other.points &&
+                   isCurrentlySpawned == other.isCurrentlySpawned;
+        }
 
     };
 
 }
+
+template <>
+struct std::hash<Food::Consumable> {
+    std::size_t operator()(const Food::Consumable& c) const {
+        using std::hash;
+        using std::size_t;
+        using std::string;
+
+        size_t res = 17;
+        res = res * 31 + hash<int>()(static_cast<int>(c.type));
+        res = res * 31 + hash<int>()(c.position.x);
+        res = res * 31 + hash<int>()(c.position.y);
+        res = res * 31 + hash<int>()(c.points);
+        res = res * 31 + hash<bool>()(c.isCurrentlySpawned);
+        return res;
+    }
+};
 
 #endif //SNAKE_CONSUMABLES_HPP

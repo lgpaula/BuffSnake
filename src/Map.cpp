@@ -125,16 +125,15 @@ void Map::updateSnake(Snake &snake) {
         cv::rectangle(map, b1, b2, cv::Scalar(255, 0, 0), -1);
     }
 
-    updateOccupiedSpaces(snake);
     checkCollisionWithBorder(head);
     checkCollisionWithConsumable(head);
+    updateOccupiedSpaces(snake);
 }
 
 void Map::updateConsumables() {
     for (auto &c : consumables) {
-        cv::Point p1 = cv::Point{c.position.x + 2, c.position.y + 2};
-        cv::Point p2 = cv::Point{c.position.x + steps.cols - 3, c.position.y + steps.rows - 3};
-        cv::rectangle(map, p1, p2, cv::Scalar(0, 255, 0), -1);
+        cv::Point p1 = cv::Point{c.position.x + (steps.cols / 2), c.position.y + (steps.rows / 2)};
+        cv::circle(map, p1, 5, cv::Scalar(0, 0, 255), -1);
     }
 }
 
@@ -146,12 +145,15 @@ void Map::updateOccupiedSpaces(Snake &snake) {
 }
 
 void Map::checkCollisionWithConsumable(CoordinateStructures::Pixel &head) {
+    Food::Consumable eaten{};
     for (const auto &c : consumables) {
         if (head.x == c.position.x && head.y == c.position.y) {
             onConsumableEaten(c);
-            consumables.erase(c);
+            eaten = c;
+            break;
         }
     }
+    consumables.erase(eaten);
 }
 
 void Map::checkCollisionWithBorder(CoordinateStructures::Pixel &head) const {
@@ -168,23 +170,27 @@ void Map::spawnConsumable(Food::Consumable consumable) {
     occupiedSpaces.insert(consumable.position);
 
     fitToGrid(consumable.position);
-    consumables.emplace_back(consumable);
-    cv::Point p1 = cv::Point{consumable.position.x + 2, consumable.position.y + 2};
-//    cv::Point p2 = cv::Point{consumable.position.x + steps.cols - 3, consumable.position.y + steps.rows - 3};
-//    cv::rectangle(map, p1, p2, cv::Scalar(0, 255, 0), -1);
-    cv::circle(map, p1, 5, cv::Scalar(0, 0, 255), -1);
+    consumables.insert(consumable);
+    updateConsumables();
 }
 
 void Map::setConsumablePosition(Food::Consumable &consumable) {
-    int x = rand() % map.cols;
-    int y = rand() % map.rows;
+    CoordinateStructures::Pixel pos = generatePosition();
 
-    //check for collision
-    if (std::find(occupiedSpaces.begin(), occupiedSpaces.end(), CoordinateStructures::Pixel{x, y}) != occupiedSpaces.end()) {
-        setConsumablePosition(consumable);
-    } else {
-        consumable.position = {x, y};
+    while (std::find(occupiedSpaces.begin(), occupiedSpaces.end(), pos) != occupiedSpaces.end()) {
+        pos = generatePosition();
     }
+
+    consumable.position = pos;
+}
+
+CoordinateStructures::Pixel Map::generatePosition() {
+    std::uniform_int_distribution<> x(0, (map.cols));
+    std::uniform_int_distribution<> y(0, (map.rows));
+
+    CoordinateStructures::Pixel pos = {x(engine), y(engine)};
+
+    return pos;
 }
 
 Map::~Map() noexcept {

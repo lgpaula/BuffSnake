@@ -5,6 +5,7 @@
 #include <opencv2/core.hpp>
 #include <thread>
 #include <unordered_set>
+#include <random>
 #include "CoordinateStructures.hpp"
 #include "IConsumables.hpp"
 
@@ -40,6 +41,7 @@ private:
     void setConsumablePosition(Food::Consumable &consumable);
     void updateOccupiedSpaces(Snake &snake);
     void updateConsumables();
+    CoordinateStructures::Pixel generatePosition();
 
 private:
     cv::Mat map;
@@ -50,6 +52,7 @@ private:
     std::thread displayThread{};
     std::unordered_set<Food::Consumable> consumables;
     std::unordered_set<CoordinateStructures::Pixel> occupiedSpaces;
+    mutable std::mt19937 engine{std::random_device{}()};
     //empty space
 
 };
