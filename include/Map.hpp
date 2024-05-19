@@ -17,8 +17,10 @@ public:
 
     using OnDirectionChange = std::function<void(CoordinateStructures::Direction input)>;
     using OnConsumableEaten = std::function<void(Food::Consumable consumable)>;
+    using OnGameOver = std::function<void()>;
 
-    Map(CoordinateStructures::Size dimension, const OnDirectionChange& onDirectionChange, OnConsumableEaten  onConsumableEaten);
+    Map(CoordinateStructures::Size dimension, const OnDirectionChange &onDirectionChange,
+        OnConsumableEaten onConsumableEaten, OnGameOver onGameOver);
 
     [[nodiscard]] CoordinateStructures::Pixel getCenter() const;
 
@@ -47,6 +49,7 @@ private:
     cv::Mat map;
     OnDirectionChange onDirectionChange;
     OnConsumableEaten onConsumableEaten;
+    OnGameOver onGameOver;
     CoordinateStructures::Steps steps{};
     std::list<std::pair<CoordinateStructures::Pixel, CoordinateStructures::Pixel>> border{};
     std::thread displayThread{};

@@ -2,12 +2,15 @@
 #define SNAKE_SNAKE_HPP
 
 #include <queue>
+#include <functional>
 #include "CoordinateStructures.hpp"
 
 class Snake {
 
 public:
-    explicit Snake(CoordinateStructures::Pixel coords, const CoordinateStructures::Steps &steps);
+    using OnGameOver = std::function<void()>;
+
+    explicit Snake(CoordinateStructures::Pixel coords, const CoordinateStructures::Steps &steps, OnGameOver onGameOver);
 
     void move(CoordinateStructures::Direction direction);
 
@@ -24,6 +27,7 @@ private:
     CoordinateStructures::Pixel headPosition;
     std::deque<CoordinateStructures::Pixel> body;
     CoordinateStructures::Steps steps;
+    OnGameOver onGameOver;
     CoordinateStructures::Direction direction = CoordinateStructures::Direction::RIGHT;
 
 };

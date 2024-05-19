@@ -2,8 +2,8 @@
 #include "../include/Snake.hpp"
 #include <algorithm>
 
-Snake::Snake(CoordinateStructures::Pixel coords, const CoordinateStructures::Steps &steps) :
-        headPosition({coords.x, coords.y}), steps(steps) {
+Snake::Snake(CoordinateStructures::Pixel coords, const CoordinateStructures::Steps &steps, OnGameOver onGameOver) :
+        headPosition({coords.x, coords.y}), steps(steps), onGameOver(std::move(onGameOver)) {
     body.push_front({headPosition.x - steps.cols, headPosition.y});
     body.push_front({body.front().x - steps.cols, headPosition.y});
 }
@@ -42,7 +42,6 @@ void Snake::grow() {
 
 void Snake::checkCollision() {
     if (std::find(body.begin(), body.end(), headPosition) != body.end()) {
-        std::cout << "Game Over!" << std::endl;
-        //add callback for restart
+        onGameOver();
     }
 }

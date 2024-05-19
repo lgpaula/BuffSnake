@@ -18,15 +18,19 @@
 #include "include/Map.hpp"
 #include "include/Game.hpp"
 #include "include/Snake.hpp"
+#include "include/Display.hpp"
 
 int main() {
-    Game game;
+    Display display;
+    Game game(display);
 
     CoordinateStructures::Size mapSize = {500, 500};
     CoordinateStructures::Steps steps = {mapSize.width / 20, mapSize.height / 20};
 
     //create snake
-    Snake snake({mapSize.width / 2, mapSize.height / 2}, steps);
+    Snake snake({mapSize.width / 2, mapSize.height / 2}, steps, [&game]() {
+        game.gameOver();
+    });
 
     //create border
     Map map(mapSize, [&snake, &map](CoordinateStructures::Direction input) {
@@ -36,6 +40,8 @@ int main() {
         game.addPoints(consumable.points);
         map.spawnConsumable(consumable);
         snake.grow();
+    }, [&game]() {
+        game.gameOver();
     });
 
     map.updateSnake(snake);

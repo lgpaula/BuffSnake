@@ -6,9 +6,10 @@
 #include "../include/Snake.hpp"
 
 Map::Map(CoordinateStructures::Size dimension, const Map::OnDirectionChange &onDirectionChange,
-         Map::OnConsumableEaten consumableEaten) : map(cv::Mat::zeros(
+         Map::OnConsumableEaten consumableEaten, Map::OnGameOver onGameOver) : map(cv::Mat::zeros(
         dimension.height, dimension.width, CV_8UC3)), onDirectionChange(onDirectionChange),
-                                                          onConsumableEaten(std::move(consumableEaten)) {
+                                                          onConsumableEaten(std::move(consumableEaten)),
+                                                          onGameOver(std::move(onGameOver)) {
     steps.cols = map.cols / 20;
     steps.rows = map.rows / 20;
 
@@ -156,9 +157,7 @@ void Map::checkCollisionWithConsumable(CoordinateStructures::Pixel &head) {
 
 void Map::checkCollisionWithBorder(CoordinateStructures::Pixel &head) const {
     if (head.x < 0 || head.x >= map.cols || head.y < 0 || head.y >= map.rows) {
-        std::cout << "Game Over!" << std::endl;
-        cv::destroyAllWindows();
-        //add callback for restart;
+        onGameOver();
     }
 }
 
