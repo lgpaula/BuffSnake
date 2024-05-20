@@ -10,7 +10,7 @@ class Snake {
 public:
     using OnGameOver = std::function<void()>;
 
-    explicit Snake(CoordinateStructures::Pixel coords, const CoordinateStructures::Steps &steps, OnGameOver onGameOver);
+    Snake(CoordinateStructures::Pixel coords, const CoordinateStructures::Steps &steps, OnGameOver onGameOver);
 
     void move(CoordinateStructures::Direction direction);
 

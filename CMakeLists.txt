@@ -9,7 +9,6 @@ set(SOURCE_FILES
         src/Map.cpp
         src/Game.cpp
         src/Snake.cpp
-        src/Display.cpp
         main.cpp)
 
 # Create a library target named 'snake_lib' from the source files

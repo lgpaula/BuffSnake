@@ -1,11 +1,11 @@
 #ifndef SNAKE_GAME_HPP
 #define SNAKE_GAME_HPP
 
-#include "Display.hpp"
+#include <opencv2/core.hpp>
 
 class Game {
 public:
-    Game(Display &display);
+    explicit Game(cv::Mat &window);
 
     void addPoints(int points);
 
@@ -13,9 +13,17 @@ public:
 
     void gameOver();
 
+    void onKeyPressed(int key);
+
+private:
+    void setInitialScreen();
+    void onHowToPlay();
+
 private:
     int gamePoints = 0;
-    Display &display;
+    cv::Mat window;
+    bool onInstructions = false;
+    bool initialScreen = true;
 };
 
 

@@ -6,6 +6,9 @@ namespace CoordinateStructures {
         int x;
         int y;
 
+        Pixel() = default;
+        Pixel(int x, int y) : x(x), y(y) {}
+
         bool operator==(const Pixel& other) const {
             return x == other.x && y == other.y;
         }

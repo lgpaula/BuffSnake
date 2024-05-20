@@ -43,10 +43,7 @@ namespace Food {
         }
 
         bool operator==(const Consumable& other) const {
-            return type == other.type &&
-                   position == other.position &&
-                   points == other.points &&
-                   isCurrentlySpawned == other.isCurrentlySpawned;
+            return type == other.type;
         }
 
     };
@@ -62,10 +59,6 @@ struct std::hash<Food::Consumable> {
 
         size_t res = 17;
         res = res * 31 + hash<int>()(static_cast<int>(c.type));
-        res = res * 31 + hash<int>()(c.position.x);
-        res = res * 31 + hash<int>()(c.position.y);
-        res = res * 31 + hash<int>()(c.points);
-        res = res * 31 + hash<bool>()(c.isCurrentlySpawned);
         return res;
     }
 };
