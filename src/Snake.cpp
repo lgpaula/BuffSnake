@@ -3,7 +3,7 @@
 #include <algorithm>
 
 Snake::Snake(CoordinateStructures::Pixel coords, const CoordinateStructures::Steps &steps, OnGameOver onGameOver) :
-        headPosition({coords.x, coords.y}), steps(steps), onGameOver(std::move(onGameOver)) {
+        headPosition(coords), steps(steps), onGameOver(std::move(onGameOver)) {
     body.emplace_front(headPosition.x - steps.cols, headPosition.y);
     body.emplace_front(body.front().x - steps.cols, headPosition.y);
 }

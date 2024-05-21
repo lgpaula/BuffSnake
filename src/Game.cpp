@@ -59,6 +59,8 @@ void Game::onHowToPlay() {
     cv::putText(window, "Press 'S' to activate the steroid effect. It lasts 3 seconds and costs 10 points",
                 cv::Point(window.cols / 2 - 450, window.rows / 2),
                 cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
+    cv::putText(window, "Press '1' to start the game", cv::Point(window.cols / 2 - 450, window.rows / 2 + 50),
+                cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
 
     int key = cv::waitKey(1);
     onKeyPressed(key);
@@ -73,5 +75,5 @@ int Game::getPoints() const {
 }
 
 void Game::gameOver() {
-
+    std::cout << "Game over" << std::endl;
 }

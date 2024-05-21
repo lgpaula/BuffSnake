@@ -19,7 +19,7 @@ public:
     using OnConsumableEaten = std::function<void(Food::Consumable consumable)>;
     using OnGameOver = std::function<void()>;
 
-    Map(CoordinateStructures::Size dimension, const OnDirectionChange &onDirectionChange,
+    Map(CoordinateStructures::Size dimension, OnDirectionChange onDirectionChange,
         OnConsumableEaten onConsumableEaten, OnGameOver onGameOver);
 
     [[nodiscard]] CoordinateStructures::Pixel getCenter() const;

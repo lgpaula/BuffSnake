@@ -2,21 +2,23 @@
 #define SNAKE_COORDINATESTRUCTURES_HPP
 
 namespace CoordinateStructures {
+
+    struct Size {
+        int height;
+        int width;
+    };
+
     struct Pixel {
         int x;
         int y;
 
         Pixel() = default;
         Pixel(int x, int y) : x(x), y(y) {}
+        explicit Pixel(Size size) : x(size.width), y(size.height) {}
 
         bool operator==(const Pixel& other) const {
             return x == other.x && y == other.y;
         }
-    };
-
-    struct Size {
-        int height;
-        int width;
     };
 
     enum Direction {

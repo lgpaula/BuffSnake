@@ -1,5 +1,6 @@
 #include <iostream>
 #include <opencv2/highgui.hpp>
+#include <opencv2/imgproc.hpp>
 #include "include/Map.hpp"
 #include "include/Game.hpp"
 #include "include/Snake.hpp"
@@ -26,11 +27,18 @@ int main() {
     }
 
     std::cout << "Game started" << std::endl;
-
     //actual game not starting
 
+//    CoordinateStructures::Pixel coords = {dimension.width, dimension.height};
+//    cv::Mat map = cv::Mat::zeros(coords.y, coords.x, CV_8UC3);
+//    //add color
+//    cv::rectangle(map, cv::Point(0, 0), cv::Point(coords.x, coords.y), cv::Scalar(73, 209, 162), cv::FILLED);
+//    cv::imshow("Map", map);
+//    cv::waitKey(0);
+
     //create snake
-    Snake snake({dimension.width / 2, dimension.height / 2}, steps, [&game]() {
+    CoordinateStructures::Pixel coords = {dimension.width / 2, dimension.height / 2};
+    Snake snake(coords, steps, [&game]() {
         game.gameOver();
     });
 

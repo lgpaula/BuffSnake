@@ -5,9 +5,9 @@
 #include <utility>
 #include "../include/Snake.hpp"
 
-Map::Map(CoordinateStructures::Size dimension, const Map::OnDirectionChange &onDirectionChange,
+Map::Map(CoordinateStructures::Size dimension, Map::OnDirectionChange onDirectionChange,
          Map::OnConsumableEaten consumableEaten, Map::OnGameOver onGameOver) : map(cv::Mat::zeros(
-        dimension.height, dimension.width, CV_8UC3)), onDirectionChange(onDirectionChange),
+        dimension.height, dimension.width, CV_8UC3)), onDirectionChange(std::move(onDirectionChange)),
                                                           onConsumableEaten(std::move(consumableEaten)),
                                                           onGameOver(std::move(onGameOver)) {
     steps.cols = map.cols / 20;
@@ -16,7 +16,7 @@ Map::Map(CoordinateStructures::Size dimension, const Map::OnDirectionChange &onD
     addBackground();
     createBorder();
 
-    displayThread = std::thread([this, onDirectionChange]() {
+    displayThread = std::thread([this]() {
         while (true) {
             cv::imshow("Map", map);
             int key = cv::waitKey(1);
