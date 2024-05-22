@@ -8,23 +8,23 @@ Snake::Snake(CoordinateStructures::Pixel coords, const CoordinateStructures::Ste
     body.emplace_front(body.front().x - steps.cols, headPosition.y);
 }
 
-void Snake::move(CoordinateStructures::Direction dir) {
+void Snake::changeDirection(CoordinateStructures::Direction dir) {
     const auto prevHead = headPosition;
     switch (dir) {
         case CoordinateStructures::Direction::UP:
-            if (direction == CoordinateStructures::Direction::DOWN) return;
+            if (direction == CoordinateStructures::Direction::DOWN || direction == CoordinateStructures::Direction::UP) return;
             headPosition.y -= steps.rows;
             break;
         case CoordinateStructures::DOWN:
-            if (direction == CoordinateStructures::Direction::UP) return;
+            if (direction == CoordinateStructures::Direction::UP || direction == CoordinateStructures::Direction::DOWN) return;
             headPosition.y += steps.rows;
             break;
         case CoordinateStructures::LEFT:
-            if (direction == CoordinateStructures::Direction::RIGHT) return;
+            if (direction == CoordinateStructures::Direction::RIGHT || direction == CoordinateStructures::Direction::LEFT) return;
             headPosition.x -= steps.cols;
             break;
         case CoordinateStructures::RIGHT:
-            if (direction == CoordinateStructures::Direction::LEFT) return;
+            if (direction == CoordinateStructures::Direction::LEFT || direction == CoordinateStructures::Direction::RIGHT) return;
             headPosition.x += steps.cols;
             break;
     }
@@ -32,6 +32,29 @@ void Snake::move(CoordinateStructures::Direction dir) {
     body.push_back(prevHead);
     body.pop_front();
     direction = dir;
+
+    checkCollision();
+}
+
+void Snake::move() {
+    const auto prevHead = headPosition;
+    switch (direction) {
+        case CoordinateStructures::Direction::UP:
+            headPosition.y -= steps.rows;
+            break;
+        case CoordinateStructures::DOWN:
+            headPosition.y += steps.rows;
+            break;
+        case CoordinateStructures::LEFT:
+            headPosition.x -= steps.cols;
+            break;
+        case CoordinateStructures::RIGHT:
+            headPosition.x += steps.cols;
+            break;
+    }
+
+    body.push_back(prevHead);
+    body.pop_front();
 
     checkCollision();
 }

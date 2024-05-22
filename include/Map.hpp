@@ -18,9 +18,10 @@ public:
     using OnDirectionChange = std::function<void(CoordinateStructures::Direction input)>;
     using OnConsumableEaten = std::function<void(Food::Consumable consumable)>;
     using OnGameOver = std::function<void()>;
+    using OnSnakeMove = std::function<void()>;
 
     Map(CoordinateStructures::Size dimension, OnDirectionChange onDirectionChange,
-        OnConsumableEaten onConsumableEaten, OnGameOver onGameOver);
+        OnConsumableEaten onConsumableEaten, OnGameOver onGameOver, OnSnakeMove onSnakeMove);
 
     [[nodiscard]] CoordinateStructures::Pixel getCenter() const;
 
@@ -50,8 +51,10 @@ private:
     OnDirectionChange onDirectionChange;
     OnConsumableEaten onConsumableEaten;
     OnGameOver onGameOver;
+    OnSnakeMove onSnakeMove;
     CoordinateStructures::Steps steps{};
     std::list<std::pair<CoordinateStructures::Pixel, CoordinateStructures::Pixel>> border{};
+    std::chrono::time_point<std::chrono::steady_clock> lastUpdate;
     std::thread displayThread{};
     std::unordered_set<Food::Consumable> consumables;
     std::unordered_set<CoordinateStructures::Pixel> occupiedSpaces;

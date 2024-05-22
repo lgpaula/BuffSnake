@@ -4,23 +4,32 @@
 #include <iostream>
 #include <utility>
 #include "../include/Snake.hpp"
+#include <chrono>
 
 Map::Map(CoordinateStructures::Size dimension, Map::OnDirectionChange onDirectionChange,
-         Map::OnConsumableEaten consumableEaten, Map::OnGameOver onGameOver) : map(cv::Mat::zeros(
-        dimension.height, dimension.width, CV_8UC3)), onDirectionChange(std::move(onDirectionChange)),
-                                                          onConsumableEaten(std::move(consumableEaten)),
-                                                          onGameOver(std::move(onGameOver)) {
+         Map::OnConsumableEaten consumableEaten, Map::OnGameOver onGameOver, Map::OnSnakeMove onSnakeMove) :
+         map(cv::Mat::zeros(dimension.height, dimension.width, CV_8UC3)), onDirectionChange(std::move(onDirectionChange)),
+                  onConsumableEaten(std::move(consumableEaten)), onGameOver(std::move(onGameOver)), onSnakeMove(onSnakeMove) {
     steps.cols = map.cols / 20;
     steps.rows = map.rows / 20;
 
     addBackground();
     createBorder();
 
-    displayThread = std::thread([this]() {
+    lastUpdate = std::chrono::steady_clock::now();
+
+    displayThread = std::thread([this, &onSnakeMove]() {
         while (true) {
             cv::imshow("Map", map);
             int key = cv::waitKey(1);
             onKeyPressed(key);
+
+            auto now = std::chrono::steady_clock::now();
+            auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastUpdate).count();
+            if (elapsed >= 300) {
+                onSnakeMove();
+                lastUpdate = now;
+            }
         }
     });
 }
@@ -32,15 +41,19 @@ void Map::onKeyPressed(int key) {
             break;
         case 82:
             onDirectionChange(CoordinateStructures::Direction::UP);
+            lastUpdate = std::chrono::steady_clock::now();
             break;
         case 84:
             onDirectionChange(CoordinateStructures::Direction::DOWN);
+            lastUpdate = std::chrono::steady_clock::now();
             break;
         case 81:
             onDirectionChange(CoordinateStructures::Direction::LEFT);
+            lastUpdate = std::chrono::steady_clock::now();
             break;
         case 83:
             onDirectionChange(CoordinateStructures::Direction::RIGHT);
+            lastUpdate = std::chrono::steady_clock::now();
             break;
         default:
             break;
@@ -109,6 +122,7 @@ void Map::fitToGrid(CoordinateStructures::Pixel &pixel) const {
 }
 
 void Map::updateSnake(Snake &snake) {
+    std::cout << __func__ << std::endl;
     addBackground();
     updateBorder();
     updateConsumables();
