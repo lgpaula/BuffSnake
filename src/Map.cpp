@@ -15,6 +15,7 @@ Map::Map(CoordinateStructures::Size dimension, Map::OnDirectionChange onDirectio
 
     addBackground();
     createBorder();
+    resizeIcons();
 
     lastUpdate = std::chrono::steady_clock::now();
 
@@ -26,12 +27,16 @@ Map::Map(CoordinateStructures::Size dimension, Map::OnDirectionChange onDirectio
 
             auto now = std::chrono::steady_clock::now();
             auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastUpdate).count();
-            if (elapsed >= 300) {
+            if (elapsed >= 500) {
                 onSnakeMove();
                 lastUpdate = now;
             }
         }
     });
+}
+
+void Map::updateTimer() {
+    lastUpdate = std::chrono::steady_clock::now();
 }
 
 void Map::onKeyPressed(int key) {
@@ -41,19 +46,15 @@ void Map::onKeyPressed(int key) {
             break;
         case 82:
             onDirectionChange(CoordinateStructures::Direction::UP);
-            lastUpdate = std::chrono::steady_clock::now();
             break;
         case 84:
             onDirectionChange(CoordinateStructures::Direction::DOWN);
-            lastUpdate = std::chrono::steady_clock::now();
             break;
         case 81:
             onDirectionChange(CoordinateStructures::Direction::LEFT);
-            lastUpdate = std::chrono::steady_clock::now();
             break;
         case 83:
             onDirectionChange(CoordinateStructures::Direction::RIGHT);
-            lastUpdate = std::chrono::steady_clock::now();
             break;
         default:
             break;
@@ -122,7 +123,6 @@ void Map::fitToGrid(CoordinateStructures::Pixel &pixel) const {
 }
 
 void Map::updateSnake(Snake &snake) {
-    std::cout << __func__ << std::endl;
     addBackground();
     updateBorder();
     updateConsumables();
@@ -183,7 +183,21 @@ void Map::spawnConsumable(Food::Consumable consumable) {
     fitToGrid(consumable.position);
     consumables.insert(consumable);
     cv::Point p1 = cv::Point{consumable.position.x + (steps.cols / 2), consumable.position.y + (steps.rows / 2)};
-    cv::circle(map, p1, 5, cv::Scalar(0, 0, 255), -1);
+    cv::Point p2 = cv::Point{consumable.position.x, consumable.position.y};
+
+    cv::Mat roi = map(cv::Rect(p2.x, p2.y, chickenLogo.cols, chickenLogo.rows));
+    cv::Mat mask;
+    if (chickenLogo.channels() == 4) {
+        // Split the logo into channels
+        cv::Mat channels[4];
+        cv::split(chickenLogo, channels);
+        cv::Mat rgb[3] = { channels[0], channels[1], channels[2] };
+        cv::merge(rgb, 3, chickenLogo);
+        mask = channels[3]; // Alpha channel
+    }
+    mask.empty() ? chickenLogo.copyTo(roi) : chickenLogo.copyTo(roi, mask);
+
+//    cv::circle(map, p1, 5, cv::Scalar(0, 0, 255), -1);
 }
 
 void Map::setConsumablePosition(Food::Consumable &consumable) {
@@ -204,6 +218,13 @@ CoordinateStructures::Pixel Map::generatePosition() {
 
     fitToGrid(pos);
     return pos;
+}
+
+void Map::resizeIcons() {
+    cv::resize(chickenLogo, chickenLogo, cv::Size(steps.cols, steps.rows));
+    cv::resize(proteinLogo, proteinLogo, cv::Size(steps.cols, steps.rows));
+    cv::resize(creatineLogo, creatineLogo, cv::Size(steps.cols, steps.rows));
+    cv::resize(steroidsLogo, steroidsLogo, cv::Size(steps.cols, steps.rows));
 }
 
 Map::~Map() noexcept {

@@ -12,7 +12,7 @@ public:
 
     Snake(CoordinateStructures::Pixel coords, const CoordinateStructures::Steps &steps, OnGameOver onGameOver);
 
-    void changeDirection(CoordinateStructures::Direction direction);
+    bool changeDirection(CoordinateStructures::Direction direction);
 
     void move();
 

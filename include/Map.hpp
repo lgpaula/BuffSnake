@@ -6,6 +6,7 @@
 #include <thread>
 #include <unordered_set>
 #include <random>
+#include <opencv2/imgcodecs.hpp>
 #include "CoordinateStructures.hpp"
 #include "IConsumables.hpp"
 
@@ -29,6 +30,8 @@ public:
 
     void updateSnake(Snake& snake);
 
+    void updateTimer();
+
     void spawnConsumable(Food::Consumable consumable);
 
     ~Map() noexcept;
@@ -44,6 +47,7 @@ private:
     void setConsumablePosition(Food::Consumable &consumable);
     void updateOccupiedSpaces(Snake &snake);
     void updateConsumables();
+    void resizeIcons();
     CoordinateStructures::Pixel generatePosition();
 
 private:
@@ -59,8 +63,11 @@ private:
     std::unordered_set<Food::Consumable> consumables;
     std::unordered_set<CoordinateStructures::Pixel> occupiedSpaces;
     mutable std::mt19937 engine{std::random_device{}()};
-    //empty space
 
+    cv::Mat chickenLogo = cv::imread("../icons/chicken.png", cv::IMREAD_COLOR);
+    cv::Mat proteinLogo = cv::imread("../icons/protein.png", cv::IMREAD_COLOR);
+    cv::Mat creatineLogo = cv::imread("../icons/creatine.png", cv::IMREAD_COLOR);
+    cv::Mat steroidsLogo = cv::imread("../icons/steroids.png", cv::IMREAD_COLOR);
 };
 
 

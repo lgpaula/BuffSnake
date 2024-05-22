@@ -8,23 +8,23 @@ Snake::Snake(CoordinateStructures::Pixel coords, const CoordinateStructures::Ste
     body.emplace_front(body.front().x - steps.cols, headPosition.y);
 }
 
-void Snake::changeDirection(CoordinateStructures::Direction dir) {
+bool Snake::changeDirection(CoordinateStructures::Direction dir) {
     const auto prevHead = headPosition;
     switch (dir) {
         case CoordinateStructures::Direction::UP:
-            if (direction == CoordinateStructures::Direction::DOWN || direction == CoordinateStructures::Direction::UP) return;
+            if (direction == CoordinateStructures::Direction::DOWN || direction == CoordinateStructures::Direction::UP) return false;
             headPosition.y -= steps.rows;
             break;
         case CoordinateStructures::DOWN:
-            if (direction == CoordinateStructures::Direction::UP || direction == CoordinateStructures::Direction::DOWN) return;
+            if (direction == CoordinateStructures::Direction::UP || direction == CoordinateStructures::Direction::DOWN) return false;
             headPosition.y += steps.rows;
             break;
         case CoordinateStructures::LEFT:
-            if (direction == CoordinateStructures::Direction::RIGHT || direction == CoordinateStructures::Direction::LEFT) return;
+            if (direction == CoordinateStructures::Direction::RIGHT || direction == CoordinateStructures::Direction::LEFT) return false;
             headPosition.x -= steps.cols;
             break;
         case CoordinateStructures::RIGHT:
-            if (direction == CoordinateStructures::Direction::LEFT || direction == CoordinateStructures::Direction::RIGHT) return;
+            if (direction == CoordinateStructures::Direction::LEFT || direction == CoordinateStructures::Direction::RIGHT) return false;
             headPosition.x += steps.cols;
             break;
     }
@@ -34,6 +34,8 @@ void Snake::changeDirection(CoordinateStructures::Direction dir) {
     direction = dir;
 
     checkCollision();
+
+    return true;
 }
 
 void Snake::move() {

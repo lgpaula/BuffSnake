@@ -35,7 +35,7 @@ int main() {
 
     //create border
     Map map(dimension, [&snake, &map](CoordinateStructures::Direction input) {
-        snake.changeDirection(input);
+        if (snake.changeDirection(input)) map.updateTimer();
         map.updateSnake(snake);
     }, [&game, &map, &snake](Food::Consumable consumable) {
         game.addPoints(consumable.points);
