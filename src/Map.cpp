@@ -15,7 +15,6 @@ Map::Map(CoordinateStructures::Size dimension, Map::OnDirectionChange onDirectio
 
     addBackground();
     createBorder();
-    resizeIcons();
 
     lastUpdate = std::chrono::steady_clock::now();
 
@@ -146,9 +145,21 @@ void Map::updateSnake(Snake &snake) {
 }
 
 void Map::updateConsumables() {
-    for (auto &c : consumables) {
-        cv::Point p1 = cv::Point{c.position.x + (steps.cols / 2), c.position.y + (steps.rows / 2)};
-        cv::circle(map, p1, 5, cv::Scalar(0, 0, 255), -1);
+    for (Food::Consumable c : consumables) {
+        cv::Point point = cv::Point{c.position.x, c.position.y};
+        cv::Mat roi = map(cv::Rect(point.x, point.y, c.icon.cols, c.icon.rows));
+        cv::Mat mask;
+
+        if (c.icon.channels() == 4) {
+            cv::Mat channels[4];
+            cv::split(c.icon, channels);
+            cv::Mat transparentAlpha = cv::Mat::zeros(channels[3].size(), channels[3].type());
+            cv::Mat rgb[3] = {channels[0], channels[1], channels[2]};
+            cv::merge(rgb, 3, c.icon);
+            mask = transparentAlpha;
+        }
+
+        mask.empty() ? c.icon.copyTo(roi) : c.icon.copyTo(roi, mask);
     }
 }
 
@@ -162,8 +173,9 @@ void Map::updateOccupiedSpaces(Snake &snake) {
 void Map::checkCollisionWithConsumable(CoordinateStructures::Pixel &head) {
     for (const auto &c : consumables) {
         if (head.x == c.position.x && head.y == c.position.y) {
+            Food::Consumable newConsumable {c.type};
             consumables.erase(c);
-            onConsumableEaten(c);
+            onConsumableEaten(newConsumable);
             break;
         }
     }
@@ -176,28 +188,13 @@ void Map::checkCollisionWithBorder(CoordinateStructures::Pixel &head) const {
 }
 
 void Map::spawnConsumable(Food::Consumable consumable) {
+    resizeIcon(consumable);
     setConsumablePosition(consumable);
 
     occupiedSpaces.insert(consumable.position);
-
     fitToGrid(consumable.position);
     consumables.insert(consumable);
-    cv::Point p1 = cv::Point{consumable.position.x + (steps.cols / 2), consumable.position.y + (steps.rows / 2)};
-    cv::Point p2 = cv::Point{consumable.position.x, consumable.position.y};
-
-    cv::Mat roi = map(cv::Rect(p2.x, p2.y, chickenLogo.cols, chickenLogo.rows));
-    cv::Mat mask;
-    if (chickenLogo.channels() == 4) {
-        // Split the logo into channels
-        cv::Mat channels[4];
-        cv::split(chickenLogo, channels);
-        cv::Mat rgb[3] = { channels[0], channels[1], channels[2] };
-        cv::merge(rgb, 3, chickenLogo);
-        mask = channels[3]; // Alpha channel
-    }
-    mask.empty() ? chickenLogo.copyTo(roi) : chickenLogo.copyTo(roi, mask);
-
-//    cv::circle(map, p1, 5, cv::Scalar(0, 0, 255), -1);
+    updateConsumables();
 }
 
 void Map::setConsumablePosition(Food::Consumable &consumable) {
@@ -220,11 +217,8 @@ CoordinateStructures::Pixel Map::generatePosition() {
     return pos;
 }
 
-void Map::resizeIcons() {
-    cv::resize(chickenLogo, chickenLogo, cv::Size(steps.cols, steps.rows));
-    cv::resize(proteinLogo, proteinLogo, cv::Size(steps.cols, steps.rows));
-    cv::resize(creatineLogo, creatineLogo, cv::Size(steps.cols, steps.rows));
-    cv::resize(steroidsLogo, steroidsLogo, cv::Size(steps.cols, steps.rows));
+void Map::resizeIcon(Food::Consumable& consumable) const {
+    cv::resize(consumable.icon, consumable.icon, cv::Size(steps.cols, steps.rows));
 }
 
 Map::~Map() noexcept {

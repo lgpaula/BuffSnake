@@ -2,6 +2,7 @@
 #define SNAKE_CONSUMABLES_HPP
 
 #include "CoordinateStructures.hpp"
+#include <iostream>
 
 namespace Food {
 
@@ -9,35 +10,44 @@ namespace Food {
         CHICKEN,
         PROTEIN,
         CREATINE,
-        STEROIDS
+        STEROIDS,
+        GENETICS
     };
 
     struct Consumable {
-        Consumable() = default;
-
         explicit Consumable(ConsumableType type) : type(type) {
-            setPoints();
+            setVars();
         }
 
         ConsumableType type{};
         CoordinateStructures::Pixel position{};
         int points{};
-        bool isCurrentlySpawned = false;
-//        Icon icon;
+        cv::Mat icon;
 
-        void setPoints() {
+        void setVars() {
             switch (type) {
                 case CHICKEN:
                     points = 5;
+                    icon = cv::imread("../icons/chicken.png", cv::IMREAD_COLOR);
                     break;
                 case PROTEIN:
                     points = 20;
+                    icon = cv::imread("../icons/protein.png", cv::IMREAD_COLOR);
                     break;
                 case CREATINE:
                     points = 20;
+                    icon = cv::imread("../icons/creatine.png", cv::IMREAD_COLOR);
                     break;
                 case STEROIDS:
                     points = -10;
+                    icon = cv::imread("../icons/steroids.png", cv::IMREAD_COLOR);
+                    break;
+                case GENETICS:
+                    points = 0;
+                    icon = cv::imread("../icons/genetics.png", cv::IMREAD_COLOR);
+                    //slows down the snake
+                    break;
+                default:
                     break;
             }
         }
