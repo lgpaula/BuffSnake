@@ -24,10 +24,6 @@ public:
     Map(CoordinateStructures::Size dimension, OnDirectionChange onDirectionChange,
         OnConsumableEaten onConsumableEaten, OnGameOver onGameOver, OnSnakeMove onSnakeMove);
 
-    [[nodiscard]] CoordinateStructures::Pixel getCenter() const;
-
-    [[nodiscard]] inline CoordinateStructures::Steps getSteps() const { return steps; }
-
     void updateSnake(Snake& snake);
 
     void updateTimer();
@@ -49,6 +45,7 @@ private:
     void updateConsumables();
     void resizeIcon(Food::Consumable& consumable) const;
     CoordinateStructures::Pixel generatePosition();
+    void spawnConsumableOverTime();
 
 private:
     cv::Mat map;
@@ -63,6 +60,7 @@ private:
     std::unordered_set<Food::Consumable> consumables;
     std::unordered_set<CoordinateStructures::Pixel> occupiedSpaces;
     mutable std::mt19937 engine{std::random_device{}()};
+    int consumablesSpawned = 0;
 };
 
 

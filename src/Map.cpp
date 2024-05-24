@@ -26,7 +26,7 @@ Map::Map(CoordinateStructures::Size dimension, Map::OnDirectionChange onDirectio
 
             auto now = std::chrono::steady_clock::now();
             auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastUpdate).count();
-            if (elapsed >= 500) {
+            if (elapsed >= 200) {
                 onSnakeMove();
                 lastUpdate = now;
             }
@@ -58,10 +58,6 @@ void Map::onKeyPressed(int key) {
         default:
             break;
     }
-}
-
-CoordinateStructures::Pixel Map::getCenter() const {
-    return CoordinateStructures::Pixel{map.rows / 2, map.cols / 2};
 }
 
 void Map::createBorder() {
@@ -187,7 +183,27 @@ void Map::checkCollisionWithBorder(CoordinateStructures::Pixel &head) const {
     }
 }
 
+void Map::spawnConsumableOverTime() {
+    if (consumablesSpawned % 10 == 0) {
+        std::uniform_int_distribution<> chance(0, 1);
+        chance(engine) ? spawnConsumable(Food::Consumable{Food::ConsumableType::PROTEIN}) :
+                        spawnConsumable(Food::Consumable{Food::ConsumableType::CREATINE});
+    }
+
+    if (consumablesSpawned % 25 == 0) {
+        spawnConsumable(Food::Consumable{Food::ConsumableType::STEROIDS});
+    }
+
+    if (consumablesSpawned % 30 == 0) {
+        std::uniform_int_distribution<> chance(1, 3);
+        if (chance(engine) == 1) spawnConsumable(Food::Consumable{Food::ConsumableType::GENETICS});
+    }
+}
+
 void Map::spawnConsumable(Food::Consumable consumable) {
+    ++consumablesSpawned;
+    spawnConsumableOverTime();
+
     resizeIcon(consumable);
     setConsumablePosition(consumable);
 

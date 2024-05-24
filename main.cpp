@@ -13,33 +13,17 @@ int main() {
 
     Game game(window);
 
-//    while (true) {
-//        cv::imshow("Window", window);
-//        int key = cv::waitKey(1);
-//        if (key == 27) exit(0);
-//        game.onKeyPressed(key);
-//
-//        if (key == '1') {
-//            std::cout << "move on"  << std::endl;
-//            cv::destroyWindow("Window");
-//            break;
-//        }
-//    }
-
-    std::cout << "Game started" << std::endl;
-
     CoordinateStructures::Pixel coords = {dimension.width / 2, dimension.height / 2};
     Snake snake(coords, steps, [&game]() {
         game.gameOver();
     });
 
-    //create border
     Map map(dimension, [&snake, &map](CoordinateStructures::Direction input) {
         if (snake.changeDirection(input)) map.updateTimer();
         map.updateSnake(snake);
     }, [&game, &map, &snake](const Food::Consumable& consumable) {
         game.addPoints(consumable.points);
-        map.spawnConsumable(consumable);
+        if (consumable.type == Food::CHICKEN) map.spawnConsumable(consumable);
         snake.grow();
     }, [&game]() {
         game.gameOver();
