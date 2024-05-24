@@ -61,6 +61,7 @@ private:
     std::unordered_set<CoordinateStructures::Pixel> occupiedSpaces;
     mutable std::mt19937 engine{std::random_device{}()};
     int consumablesSpawned = 0;
+    int timeToMove = 400;
 };
 
 

@@ -26,7 +26,7 @@ Map::Map(CoordinateStructures::Size dimension, Map::OnDirectionChange onDirectio
 
             auto now = std::chrono::steady_clock::now();
             auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastUpdate).count();
-            if (elapsed >= 200) {
+            if (elapsed >= timeToMove) {
                 onSnakeMove();
                 lastUpdate = now;
             }
@@ -170,6 +170,7 @@ void Map::checkCollisionWithConsumable(CoordinateStructures::Pixel &head) {
     for (const auto &c : consumables) {
         if (head.x == c.position.x && head.y == c.position.y) {
             Food::Consumable newConsumable {c.type};
+            if (c.type == Food::ConsumableType::GENETICS) timeToMove *= 2;
             consumables.erase(c);
             onConsumableEaten(newConsumable);
             break;

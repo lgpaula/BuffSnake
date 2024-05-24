@@ -61,12 +61,38 @@ void Snake::move() {
     checkCollision();
 }
 
+void Snake::applyEffect(Food::Effect effect) {
+    switch (effect) {
+        case Food::Effect::FULL_GROWTH:
+            grow();
+            break;
+        case Food::Effect::PARTIAL_GROWTH: {
+            std::uniform_int_distribution<> chance(1, 4);
+            if (chance(engine) != 1) grow();
+            break;
+        }
+        case Food::Effect::RAMPAGE:
+            rampageMode();
+            break;
+        case Food::Effect::TIME_SLOW:
+            break;
+    }
+}
+
+void Snake::rampageMode() {
+    onRampage = true;
+}
+
 void Snake::grow() {
     body.push_front(body.front());
 }
 
 void Snake::checkCollision() {
     if (std::find(body.begin(), body.end(), headPosition) != body.end()) {
+        if (onRampage) {
+            onRampage = false;
+            return;
+        }
         onGameOver();
     }
 }

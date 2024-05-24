@@ -3,7 +3,9 @@
 
 #include <queue>
 #include <functional>
+#include <random>
 #include "CoordinateStructures.hpp"
+#include "IConsumables.hpp"
 
 class Snake {
 
@@ -18,6 +20,8 @@ public:
 
     void grow();
 
+    void applyEffect(Food::Effect effect);
+
     [[nodiscard]] inline CoordinateStructures::Pixel &getHeadPosition() { return headPosition; }
 
     [[nodiscard]] inline std::deque<CoordinateStructures::Pixel> &getBody() { return body; }
@@ -25,12 +29,17 @@ public:
 private:
     void checkCollision();
 
+    void rampageMode();
+
 private:
     CoordinateStructures::Pixel headPosition;
     std::deque<CoordinateStructures::Pixel> body;
     CoordinateStructures::Steps steps;
     OnGameOver onGameOver;
     CoordinateStructures::Direction direction = CoordinateStructures::Direction::RIGHT;
+    mutable std::mt19937 engine{std::random_device{}()};
+    bool onRampage = false;
+    int rampageTimer = 3000;
 
 };
 

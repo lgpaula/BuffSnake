@@ -3,6 +3,7 @@
 
 #include "CoordinateStructures.hpp"
 #include <iostream>
+#include <opencv2/highgui.hpp>
 
 namespace Food {
 

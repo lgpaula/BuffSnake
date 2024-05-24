@@ -1,6 +1,4 @@
 #include <iostream>
-#include <opencv2/highgui.hpp>
-#include <opencv2/imgproc.hpp>
 #include "include/Map.hpp"
 #include "include/Game.hpp"
 #include "include/Snake.hpp"
@@ -24,7 +22,7 @@ int main() {
     }, [&game, &map, &snake](const Food::Consumable& consumable) {
         game.addPoints(consumable.points);
         if (consumable.type == Food::CHICKEN) map.spawnConsumable(consumable);
-        snake.grow();
+        snake.applyEffect(consumable.effect);
     }, [&game]() {
         game.gameOver();
     }, [&snake, &map]() {
