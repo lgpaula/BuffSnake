@@ -170,9 +170,14 @@ void Map::checkCollisionWithConsumable(CoordinateStructures::Pixel &head) {
     for (const auto &c : consumables) {
         if (head.x == c.position.x && head.y == c.position.y) {
             Food::Consumable newConsumable {c.type};
-            if (c.type == Food::ConsumableType::GENETICS) timeToMove *= 2;
+            if (c.type == Food::ConsumableType::GENETICS) {
+                timeToMove *= 2;
+                timeToMove = std::clamp(timeToMove, 20, 400);
+            }
             consumables.erase(c);
             onConsumableEaten(newConsumable);
+            timeToMove -= 3;
+            timeToMove = std::clamp(timeToMove, 20, 400);
             break;
         }
     }
