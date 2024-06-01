@@ -117,6 +117,14 @@ void Map::fitToGrid(CoordinateStructures::Pixel &pixel) const {
     pixel.y = pixel.y - (pixel.y % steps.rows);
 }
 
+cv::Scalar Map::randomize() {
+    std::uniform_int_distribution<> r(0, 255);
+    std::uniform_int_distribution<> g(0, 255);
+    std::uniform_int_distribution<> b(0, 255);
+    cv::Scalar out = cv::Scalar(b(engine), g(engine), r(engine));
+    return out;
+}
+
 void Map::updateSnake(Snake &snake) {
     addBackground();
     updateBorder();
@@ -126,16 +134,18 @@ void Map::updateSnake(Snake &snake) {
     fitToGrid(head);
     cv::Point h1 = cv::Point{head.x + 2, head.y + 2};
     cv::Point h2 = cv::Point{head.x + steps.cols - 3, head.y + steps.rows - 3};
-    cv::rectangle(map, h1, h2, cv::Scalar(255, 0, 0), -1);
+    cv::Scalar headColor = snake.isOnSteroids() ? randomize() : cv::Scalar(255, 0, 0);
+    cv::rectangle(map, h1, h2, headColor, -1);
 
     for (auto& b : snake.getBody()) {
         fitToGrid(b);
         cv::Point b1 = cv::Point{b.x + 5, b.y + 5};
         cv::Point b2 = cv::Point{b.x + steps.cols - 6, b.y + steps.rows - 6};
-        cv::rectangle(map, b1, b2, cv::Scalar(255, 0, 0), -1);
+        cv::Scalar bodyColor = snake.isOnSteroids() ? randomize() : cv::Scalar(255, 0, 0);
+        cv::rectangle(map, b1, b2, bodyColor, -1);
     }
 
-    checkCollisionWithBorder(head);
+    checkCollisionWithBorder(snake);
     checkCollisionWithConsumable(head);
     updateOccupiedSpaces(snake);
 }
@@ -183,10 +193,41 @@ void Map::checkCollisionWithConsumable(CoordinateStructures::Pixel &head) {
     }
 }
 
-void Map::checkCollisionWithBorder(CoordinateStructures::Pixel &head) const {
+void Map::removeBorderInX(const CoordinateStructures::Pixel &head) {
+    for (auto it = border.begin(); it != border.end(); ) (it->first.y == head.y) ? border.erase(it) : ++it;
+}
+
+void Map::removeBorderInY(const CoordinateStructures::Pixel &head) {
+    for (auto it = border.begin(); it != border.end(); ) (it->first.x == head.x) ? border.erase(it) : ++it;
+}
+
+void Map::checkCollisionWithBorder(Snake &snake) {
+    auto head = snake.getHeadPosition();
     if (head.x < 0 || head.x >= map.cols || head.y < 0 || head.y >= map.rows) {
-        onGameOver();
+        if (!snake.isOnSteroids()) {
+            onGameOver();
+            return;
+        }
+        snake.setOnSteroids(false);
     }
+    if (head.x < 0) {
+        removeBorderInX(head);
+        snake.setHeadPosition({map.cols - steps.cols, head.y});
+    }
+    if (head.x > map.cols) {
+        removeBorderInX(head);
+        snake.setHeadPosition({0, head.y});
+    }
+    if (head.y < 0) {
+        removeBorderInY(head);
+        snake.setHeadPosition({head.x, map.rows - steps.rows});
+    }
+    if (head.y > map.rows) {
+        removeBorderInY(head);
+        snake.setHeadPosition({head.x, 0});
+    }
+    //todo head doesnt not update location
+    //if it crosses borders and there's a consumable on the other side, it currently does not eat it.
 }
 
 void Map::spawnConsumableOverTime() {

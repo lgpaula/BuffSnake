@@ -38,7 +38,7 @@ private:
     void updateBorder();
     void fitToGrid(CoordinateStructures::Pixel &pixel) const;
     void onKeyPressed(int key);
-    void checkCollisionWithBorder(CoordinateStructures::Pixel &head) const;
+    void checkCollisionWithBorder(Snake &head);
     void checkCollisionWithConsumable(CoordinateStructures::Pixel &head);
     void setConsumablePosition(Food::Consumable &consumable);
     void updateOccupiedSpaces(Snake &snake);
@@ -46,6 +46,9 @@ private:
     void resizeIcon(Food::Consumable& consumable) const;
     CoordinateStructures::Pixel generatePosition();
     void spawnConsumableOverTime();
+    cv::Scalar randomize();
+    void removeBorderInX(const CoordinateStructures::Pixel &head);
+    void removeBorderInY(const CoordinateStructures::Pixel &head);
 
 private:
     cv::Mat map;

@@ -26,10 +26,14 @@ public:
 
     [[nodiscard]] inline std::deque<CoordinateStructures::Pixel> &getBody() { return body; }
 
+    inline bool isOnSteroids() const { return onSteroids; };
+
+    void setOnSteroids(bool value);
+
+    void setHeadPosition(CoordinateStructures::Pixel newPos);
+
 private:
     void checkCollision();
-
-    void rampageMode();
 
 private:
     CoordinateStructures::Pixel headPosition;
@@ -38,7 +42,7 @@ private:
     OnGameOver onGameOver;
     CoordinateStructures::Direction direction = CoordinateStructures::Direction::RIGHT;
     mutable std::mt19937 engine{std::random_device{}()};
-    bool onRampage = false;
+    bool onSteroids = false;
     int rampageTimer = 3000;
 
 };

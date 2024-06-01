@@ -72,15 +72,15 @@ void Snake::applyEffect(Food::Effect effect) {
             break;
         }
         case Food::Effect::RAMPAGE:
-            rampageMode();
+            setOnSteroids(true);
             break;
         case Food::Effect::TIME_SLOW:
             break;
     }
 }
 
-void Snake::rampageMode() {
-    onRampage = true;
+void Snake::setOnSteroids(bool value) {
+    onSteroids = value;
 }
 
 void Snake::grow() {
@@ -89,10 +89,14 @@ void Snake::grow() {
 
 void Snake::checkCollision() {
     if (std::find(body.begin(), body.end(), headPosition) != body.end()) {
-        if (onRampage) {
-            onRampage = false;
+        if (onSteroids) {
+            setOnSteroids(false);
             return;
         }
         onGameOver();
     }
+}
+
+void Snake::setHeadPosition(CoordinateStructures::Pixel newPos) {
+    headPosition = newPos;
 }
