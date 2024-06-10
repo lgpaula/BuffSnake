@@ -88,8 +88,10 @@ void Snake::grow() {
 }
 
 void Snake::checkCollision() {
-    if (std::find(body.begin(), body.end(), headPosition) != body.end()) {
+    auto it = std::find(body.begin(), body.end(), headPosition);
+    if (it != body.end()) {
         if (onSteroids) {
+            body.erase(body.begin(), ++it);
             setOnSteroids(false);
             return;
         }
