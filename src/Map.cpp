@@ -151,21 +151,10 @@ void Map::updateSnake(Snake &snake) {
 }
 
 void Map::updateConsumables() {
-    for (Food::Consumable c : consumables) {
+    for (const Food::Consumable& c : consumables) {
         cv::Point point = cv::Point{c.position.x, c.position.y};
         cv::Mat roi = map(cv::Rect(point.x, point.y, c.icon.cols, c.icon.rows));
-        cv::Mat mask;
-
-        if (c.icon.channels() == 4) {
-            cv::Mat channels[4];
-            cv::split(c.icon, channels);
-            cv::Mat transparentAlpha = cv::Mat::zeros(channels[3].size(), channels[3].type());
-            cv::Mat rgb[3] = {channels[0], channels[1], channels[2]};
-            cv::merge(rgb, 3, c.icon);
-            mask = transparentAlpha;
-        }
-
-        mask.empty() ? c.icon.copyTo(roi) : c.icon.copyTo(roi, mask);
+        c.icon.copyTo(roi);
     }
 }
 
@@ -194,11 +183,11 @@ void Map::checkCollisionWithConsumable(CoordinateStructures::Pixel &head) {
 }
 
 void Map::removeBorderInX(const CoordinateStructures::Pixel &head) {
-    for (auto it = border.begin(); it != border.end(); ) (it->first.y == head.y) ? border.erase(it) : ++it;
+//    for (auto it = border.begin(); it != border.end(); ) (it->first.y == head.y) ? border.erase(it) : ++it;
 }
 
 void Map::removeBorderInY(const CoordinateStructures::Pixel &head) {
-    for (auto it = border.begin(); it != border.end(); ) (it->first.x == head.x) ? border.erase(it) : ++it;
+//    for (auto it = border.begin(); it != border.end(); ) (it->first.x == head.x) ? border.erase(it) : ++it;
 }
 
 void Map::checkCollisionWithBorder(Snake &snake) {
@@ -206,28 +195,30 @@ void Map::checkCollisionWithBorder(Snake &snake) {
     if (head.x < 0 || head.x >= map.cols || head.y < 0 || head.y >= map.rows) {
         if (!snake.isOnSteroids()) {
             onGameOver();
-            return;
+//            return;
         }
         snake.setOnSteroids(false);
     }
     if (head.x < 0) {
         removeBorderInX(head);
         snake.setHeadPosition({map.cols - steps.cols, head.y});
+        updateSnake(snake);
     }
-    if (head.x > map.cols) {
+    if (head.x > map.cols - steps.cols) {
         removeBorderInX(head);
         snake.setHeadPosition({0, head.y});
+        updateSnake(snake);
     }
     if (head.y < 0) {
         removeBorderInY(head);
         snake.setHeadPosition({head.x, map.rows - steps.rows});
+        updateSnake(snake);
     }
-    if (head.y > map.rows) {
+    if (head.y > map.rows - steps.rows) {
         removeBorderInY(head);
         snake.setHeadPosition({head.x, 0});
+        updateSnake(snake);
     }
-    //todo head doesnt not update location
-    //if it crosses borders and there's a consumable on the other side, it currently does not eat it.
 }
 
 void Map::spawnConsumableOverTime() {
@@ -237,7 +228,7 @@ void Map::spawnConsumableOverTime() {
                         spawnConsumable(Food::Consumable{Food::ConsumableType::CREATINE});
     }
 
-    if (consumablesSpawned % 25 == 0) {
+    if (consumablesSpawned % 2 == 0) {
         spawnConsumable(Food::Consumable{Food::ConsumableType::STEROIDS});
     }
 
