@@ -81,4 +81,5 @@ int Game::getPoints() const {
 void Game::gameOver() {
     //map has got to be part of game. Consequently, snake has to be part of game.
     std::cout << "Game over" << std::endl;
+    exit(0);
 }

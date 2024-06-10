@@ -194,32 +194,34 @@ void Map::removeBorderInY(const CoordinateStructures::Pixel &head) {
 
 void Map::checkCollisionWithBorder(Snake &snake) {
     auto head = snake.getHeadPosition();
-    if (head.x < 0 || head.x >= map.cols || head.y < 0 || head.y >= map.rows) {
+    if (std::find(border.begin(), border.end(), std::make_pair(head, head)) != border.end()) {
         if (!snake.isOnSteroids()) {
             onGameOver();
-//            return;
         }
-        snake.setOnSteroids(false);
     }
     if (head.x < 0) {
         removeBorderInX(head);
         snake.setHeadPosition({map.cols - steps.cols, head.y});
         updateSnake(snake);
+        snake.setOnSteroids(false);
     }
     if (head.x > map.cols - steps.cols) {
         removeBorderInX(head);
         snake.setHeadPosition({0, head.y});
         updateSnake(snake);
+        snake.setOnSteroids(false);
     }
     if (head.y < 0) {
         removeBorderInY(head);
         snake.setHeadPosition({head.x, map.rows - steps.rows});
         updateSnake(snake);
+        snake.setOnSteroids(false);
     }
     if (head.y > map.rows - steps.rows) {
         removeBorderInY(head);
         snake.setHeadPosition({head.x, 0});
         updateSnake(snake);
+        snake.setOnSteroids(false);
     }
 }
 
