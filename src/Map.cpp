@@ -183,11 +183,13 @@ void Map::checkCollisionWithConsumable(CoordinateStructures::Pixel &head) {
 }
 
 void Map::removeBorderInX(const CoordinateStructures::Pixel &head) {
-//    for (auto it = border.begin(); it != border.end(); ) (it->first.y == head.y) ? border.erase(it) : ++it;
+    for (auto it = border.begin(); it != border.end(); )
+        (it->first.y == head.y && it->second.y != head.y) ? it = border.erase(it) : ++it;
 }
 
 void Map::removeBorderInY(const CoordinateStructures::Pixel &head) {
-//    for (auto it = border.begin(); it != border.end(); ) (it->first.x == head.x) ? border.erase(it) : ++it;
+    for (auto it = border.begin(); it != border.end(); )
+        (it->first.x == head.x && it->second.x != head.x) ? it = border.erase(it) : ++it;
 }
 
 void Map::checkCollisionWithBorder(Snake &snake) {
