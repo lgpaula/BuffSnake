@@ -89,7 +89,6 @@ void Map::createBorder() {
 }
 
 void Map::updateBorder() {
-    //add callback for border update (when broken);
     for (const auto &b: border)
         cv::line(map, cv::Point(b.first.x, b.first.y), cv::Point(b.second.x, b.second.y), cv::Scalar(0, 0, 255), 2);
 }
@@ -150,11 +149,26 @@ void Map::updateSnake(Snake &snake) {
     updateOccupiedSpaces(snake);
 }
 
+void removeAlpha(cv::Mat& roi, const cv::Mat& icon) {
+    std::vector<cv::Mat> channels;
+    cv::split(icon, channels);
+    cv::Mat alpha = channels[3];
+    channels.pop_back();
+    cv::Mat bgr;
+    cv::merge(channels, bgr);
+    cv::Mat mask;
+    cv::cvtColor(alpha, mask, cv::COLOR_GRAY2BGR);
+    cv::Mat blended;
+    cv::multiply(bgr, mask, blended, 1.0 / 255);
+    cv::multiply(roi, cv::Scalar::all(255) - mask, roi, 1.0 / 255);
+    cv::add(roi, blended, roi);
+}
+
 void Map::updateConsumables() {
     for (const Food::Consumable& c : consumables) {
         cv::Point point = cv::Point{c.position.x, c.position.y};
-        cv::Mat roi = map(cv::Rect(point.x, point.y, c.icon.cols, c.icon.rows));
-        c.icon.copyTo(roi);
+        cv::Mat roi = map(cv::Rect(point.x + 2, point.y + 2, c.icon.cols, c.icon.rows));
+        removeAlpha(roi, c.icon);
     }
 }
 
@@ -165,18 +179,28 @@ void Map::updateOccupiedSpaces(Snake &snake) {
     for (const auto &c : consumables) occupiedSpaces.insert(c.position);
 }
 
+void clampTick(int &timeToMove) {
+    timeToMove -= 3;
+    timeToMove = std::clamp(timeToMove, 20, 400);
+}
+
+void Map::updateGameTick() {
+    timeToMove -= 3;
+    clampTick(timeToMove);
+}
+
 void Map::checkCollisionWithConsumable(CoordinateStructures::Pixel &head) {
     for (const auto &c : consumables) {
         if (head.x == c.position.x && head.y == c.position.y) {
             Food::Consumable newConsumable {c.type};
             if (c.type == Food::ConsumableType::GENETICS) {
                 timeToMove *= 2;
-                timeToMove = std::clamp(timeToMove, 20, 400);
+                clampTick(timeToMove);
             }
+
             consumables.erase(c);
+            updateGameTick();
             onConsumableEaten(newConsumable);
-            timeToMove -= 3;
-            timeToMove = std::clamp(timeToMove, 20, 400);
             break;
         }
     }
@@ -230,7 +254,7 @@ void Map::spawnConsumableOverTime() {
                         spawnConsumable(Food::Consumable{Food::ConsumableType::CREATINE});
     }
 
-    if (consumablesSpawned % 2 == 0) {
+    if (consumablesSpawned % 15 == 0) {
         spawnConsumable(Food::Consumable{Food::ConsumableType::STEROIDS});
     }
 
@@ -274,7 +298,7 @@ CoordinateStructures::Pixel Map::generatePosition() {
 }
 
 void Map::resizeIcon(Food::Consumable& consumable) const {
-    cv::resize(consumable.icon, consumable.icon, cv::Size(steps.cols, steps.rows));
+    cv::resize(consumable.icon, consumable.icon, cv::Size(steps.cols - 4, steps.rows - 4));
 }
 
 Map::~Map() noexcept {

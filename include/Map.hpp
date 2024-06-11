@@ -49,6 +49,7 @@ private:
     cv::Scalar randomize();
     void removeBorderInX(const CoordinateStructures::Pixel &head);
     void removeBorderInY(const CoordinateStructures::Pixel &head);
+    void updateGameTick();
 
 private:
     cv::Mat map;
@@ -62,7 +63,7 @@ private:
     std::thread displayThread{};
     std::unordered_set<Food::Consumable> consumables;
     std::unordered_set<CoordinateStructures::Pixel> occupiedSpaces;
-    mutable std::mt19937 engine{std::random_device{}()};
+    std::mt19937 engine{std::random_device{}()};
     int consumablesSpawned = 0;
     int timeToMove = 400;
 };
