@@ -189,13 +189,26 @@ void Map::updateGameTick() {
     clampTick(timeToMove);
 }
 
+void Map::showPoints(const Food::Consumable& consumable) {
+    cv::Point point = cv::Point{consumable.position.x, consumable.position.y};
+    cv::putText(map, "+" + std::to_string(consumable.points), point, cv::FONT_HERSHEY_SIMPLEX, 0.6, cv::Scalar(0, 0, 0), 2);
+}
+
 void Map::checkCollisionWithConsumable(CoordinateStructures::Pixel &head) {
     for (const auto &c : consumables) {
         if (head.x == c.position.x && head.y == c.position.y) {
+            ++consumablesEaten;
+            spawnConsumableOverTime();
+
+            showPoints(c);
+
             Food::Consumable newConsumable {c.type};
             if (c.type == Food::ConsumableType::GENETICS) {
-                timeToMove *= 2;
-                clampTick(timeToMove);
+                std::uniform_int_distribution<> chance(1, 3);
+                if (chance(engine) == 1) {
+                    timeToMove *= 2;
+                    clampTick(timeToMove);
+                }
             }
 
             consumables.erase(c);
@@ -218,7 +231,7 @@ void Map::removeBorderInY(const CoordinateStructures::Pixel &head) {
 
 void Map::checkCollisionWithBorder(Snake &snake) {
     auto head = snake.getHeadPosition();
-    if (std::find(border.begin(), border.end(), std::make_pair(head, head)) != border.end())
+    if (head.x < 0 || head.x > map.cols - steps.cols || head.y < 0 || head.y > map.rows - steps.rows)
         if (!snake.isOnSteroids()) onGameOver();
 
     if (head.x < 0) {
@@ -248,26 +261,22 @@ void Map::checkCollisionWithBorder(Snake &snake) {
 }
 
 void Map::spawnConsumableOverTime() {
-    if (consumablesSpawned % 10 == 0) {
+    if (consumablesEaten % 8 == 0) {
         std::uniform_int_distribution<> chance(0, 1);
         chance(engine) ? spawnConsumable(Food::Consumable{Food::ConsumableType::PROTEIN}) :
                         spawnConsumable(Food::Consumable{Food::ConsumableType::CREATINE});
     }
 
-    if (consumablesSpawned % 15 == 0) {
+    if (consumablesEaten % 15 == 0) {
         spawnConsumable(Food::Consumable{Food::ConsumableType::STEROIDS});
     }
 
-    if (consumablesSpawned % 30 == 0) {
-        std::uniform_int_distribution<> chance(1, 3);
-        if (chance(engine) == 1) spawnConsumable(Food::Consumable{Food::ConsumableType::GENETICS});
+    if (consumablesEaten % 20 == 0) {
+        spawnConsumable(Food::Consumable{Food::ConsumableType::GENETICS});
     }
 }
 
 void Map::spawnConsumable(Food::Consumable consumable) {
-    ++consumablesSpawned;
-    spawnConsumableOverTime();
-
     resizeIcon(consumable);
     setConsumablePosition(consumable);
 
@@ -288,8 +297,8 @@ void Map::setConsumablePosition(Food::Consumable &consumable) {
 }
 
 CoordinateStructures::Pixel Map::generatePosition() {
-    std::uniform_int_distribution<> x(0, (map.cols));
-    std::uniform_int_distribution<> y(0, (map.rows));
+    std::uniform_int_distribution<> x(0, (map.cols)); // -1
+    std::uniform_int_distribution<> y(0, (map.rows)); // -1
 
     CoordinateStructures::Pixel pos = {x(engine), y(engine)};
 
