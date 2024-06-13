@@ -13,7 +13,7 @@ Map::Map(CoordinateStructures::Size dimension, Map::OnDirectionChange onDirectio
     steps.cols = map.cols / 20;
     steps.rows = map.rows / 20;
 
-    addBackground();
+    updateBackground();
     createBorder();
 
     lastUpdate = std::chrono::steady_clock::now();
@@ -93,7 +93,11 @@ void Map::updateBorder() {
         cv::line(map, cv::Point(b.first.x, b.first.y), cv::Point(b.second.x, b.second.y), cv::Scalar(0, 0, 255), 2);
 }
 
-void Map::addBackground() {
+void Map::updatePoints(int points) {
+    currentPoints += points;
+}
+
+void Map::updateBackground() {
     int iCounter = 0;
     int jCounter = 0;
 
@@ -125,7 +129,7 @@ cv::Scalar Map::randomize() {
 }
 
 void Map::updateSnake(Snake &snake) {
-    addBackground();
+    updateBackground();
     updateBorder();
     updateConsumables();
 
@@ -189,7 +193,7 @@ void Map::updateGameTick() {
     clampTick(timeToMove);
 }
 
-void Map::showPoints(const Food::Consumable& consumable) {
+void Map::showPointsOnConsumable(const Food::Consumable& consumable) {
     cv::Point point = cv::Point{consumable.position.x, consumable.position.y};
     cv::putText(map, "+" + std::to_string(consumable.points), point, cv::FONT_HERSHEY_SIMPLEX, 0.6, cv::Scalar(0, 0, 0), 2);
 }
@@ -200,7 +204,7 @@ void Map::checkCollisionWithConsumable(CoordinateStructures::Pixel &head) {
             ++consumablesEaten;
             spawnConsumableOverTime();
 
-            showPoints(c);
+            showPointsOnConsumable(c);
 
             Food::Consumable newConsumable {c.type};
             if (c.type == Food::ConsumableType::GENETICS) {
@@ -229,10 +233,19 @@ void Map::removeBorderInY(const CoordinateStructures::Pixel &head) {
         (it->first.x == head.x && it->second.x != head.x) ? it = border.erase(it) : ++it;
 }
 
+bool Map::borderCollision(Snake snake) {
+    for (const auto &b : border) {
+        if (snake.getHeadPosition().x == b.first.x && snake.getHeadPosition().y == b.first.y) return true;
+        if (snake.getHeadPosition().x == b.second.x && snake.getHeadPosition().y == b.second.y) return true;
+    }
+
+    return false;
+}
+
 void Map::checkCollisionWithBorder(Snake &snake) {
     auto head = snake.getHeadPosition();
     if (head.x < 0 || head.x > map.cols - steps.cols || head.y < 0 || head.y > map.rows - steps.rows)
-        if (!snake.isOnSteroids()) onGameOver();
+        if (!snake.isOnSteroids() && borderCollision(snake)) onGameOver();
 
     if (head.x < 0) {
         removeBorderInX(head);

@@ -43,7 +43,7 @@ private:
     CoordinateStructures::Direction direction = CoordinateStructures::Direction::RIGHT;
     mutable std::mt19937 engine{std::random_device{}()};
     bool onSteroids = false;
-    int rampageTimer = 3000;
+    int steroidTimer = 3000;
 
 };
 

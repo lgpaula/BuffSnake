@@ -30,10 +30,12 @@ public:
 
     void spawnConsumable(Food::Consumable consumable);
 
+    void updatePoints(int points);
+
     ~Map() noexcept;
 
 private:
-    void addBackground();
+    void updateBackground();
     void createBorder();
     void updateBorder();
     void fitToGrid(CoordinateStructures::Pixel &pixel) const;
@@ -50,7 +52,8 @@ private:
     void removeBorderInX(const CoordinateStructures::Pixel &head);
     void removeBorderInY(const CoordinateStructures::Pixel &head);
     void updateGameTick();
-    void showPoints(const Food::Consumable& consumable);
+    void showPointsOnConsumable(const Food::Consumable& consumable);
+    bool borderCollision(Snake snake);
 
 private:
     cv::Mat map;
@@ -67,6 +70,7 @@ private:
     std::mt19937 engine{std::random_device{}()};
     int consumablesEaten = 0;
     int timeToMove = 400;
+    int currentPoints = 0;
 };
 
 

@@ -32,34 +32,35 @@ namespace Food {
         cv::Mat icon;
         Effect effect{};
         CoordinateStructures::Pixel position{};
+        //todo add effect duration
+        //todo add display duration
 
         void setVars() {
             switch (type) {
                 case CHICKEN:
                     points = 5;
-                    icon = cv::imread("../icons/chicken.png", cv::IMREAD_UNCHANGED);
+                    icon = cv::imread("icons/chicken.png", cv::IMREAD_UNCHANGED);
                     effect = Effect::FULL_GROWTH;
                     break;
                 case PROTEIN:
                     points = 20;
-                    icon = cv::imread("../icons/protein.png", cv::IMREAD_UNCHANGED);
+                    icon = cv::imread("icons/protein.png", cv::IMREAD_UNCHANGED);
                     effect = Effect::FULL_GROWTH;
                     break;
                 case CREATINE:
                     points = 20;
-                    icon = cv::imread("../icons/creatine.png", cv::IMREAD_UNCHANGED);
+                    icon = cv::imread("icons/creatine.png", cv::IMREAD_UNCHANGED);
                     effect = Effect::PARTIAL_GROWTH;
                     break;
                 case STEROIDS:
-                    points = -10;
-                    icon = cv::imread("../icons/steroids.png", cv::IMREAD_UNCHANGED);
+                    points = -50;
+                    icon = cv::imread("icons/steroids.png", cv::IMREAD_UNCHANGED);
                     effect = Effect::RAMPAGE;
                     break;
                 case GENETICS:
                     points = 0;
-                    icon = cv::imread("../icons/genetics.png", cv::IMREAD_UNCHANGED);
+                    icon = cv::imread("icons/genetics.png", cv::IMREAD_UNCHANGED);
                     effect = Effect::TIME_SLOW;
-                    //slows down the snake
                     break;
                 default:
                     break;

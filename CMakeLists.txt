@@ -11,6 +11,8 @@ set(SOURCE_FILES
         src/Snake.cpp
         main.cpp)
 
+file(COPY icons DESTINATION ${CMAKE_BINARY_DIR})
+
 # Create a library target named 'snake_lib' from the source files
 add_library(snake_lib ${SOURCE_FILES})
 

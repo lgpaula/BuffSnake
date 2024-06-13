@@ -23,6 +23,7 @@ int main() {
         game.addPoints(consumable.points);
         if (consumable.type == Food::CHICKEN) map.spawnConsumable(consumable);
         snake.applyEffect(consumable.effect);
+        map.updatePoints(game.getPoints());
     }, [&game]() {
         game.gameOver();
     }, [&snake, &map]() {
