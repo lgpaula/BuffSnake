@@ -1,45 +1,39 @@
-/*
- * Normal snake game.
- * Closed borders.
- *
- * Power-ups after x food. -> up for discussion.
- *
- * food:
- *  - chicken -> points += 5
- *
- * POWER-UPS:
- *  - creatine: has 25% chance of not growing. points += 20
- *  - protein: points += 20
- *
- *  - steroids: 3 seconds to break 1 border or body (not instant).
- */
-
-
-
-
 #include <iostream>
-#include <thread>
-#include <chrono>
+#include "include/Map.hpp"
+#include "include/Game.hpp"
+#include "include/Snake.hpp"
 
 int main() {
-    std::cout << "Hello, World!" << std::endl;
+    cv::Mat window = cv::Mat::zeros(720, 1080, CV_8UC3);
 
-    //create border
+    CoordinateStructures::Size dimension = {500, 500};
+    CoordinateStructures::Steps steps = {dimension.width / 20, dimension.height / 20};
 
-    //create snake
+    Game game(window);
 
+    CoordinateStructures::Pixel coords = {dimension.width / 2, dimension.height / 2};
+    Snake snake(coords, steps, [&game]() {
+        game.gameOver();
+    });
 
+    Map map(dimension, [&snake, &map](CoordinateStructures::Direction input) {
+        if (snake.changeDirection(input)) map.updateTimer();
+        map.updateSnake(snake);
+    }, [&game, &map, &snake](const Food::Consumable& consumable) {
+        game.addPoints(consumable.points);
+        if (consumable.type == Food::CHICKEN) map.spawnConsumable(consumable);
+        snake.applyEffect(consumable.effect);
+        map.updatePoints(game.getPoints());
+    }, [&game]() {
+        game.gameOver();
+    }, [&snake, &map]() {
+        snake.move();
+        map.updateSnake(snake);
+    });
 
-    //create food thread
-    int inputMove;
-    while (true) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(300));
-
-        int ch = getchar();
-        std::cout << "ch: " << ch << std::endl;
-    }
-
-
+    map.updateSnake(snake);
+    Food::Consumable consumable = Food::Consumable{Food::ConsumableType::CHICKEN};
+    map.spawnConsumable(consumable);
 
     return 0;
 }
