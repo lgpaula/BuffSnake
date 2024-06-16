@@ -64,7 +64,7 @@ void Map::onKeyPressed(int key) {
     switch (key) {
         case 27:
             cv::destroyAllWindows();
-            break;
+            exit(0);
         case 82:
             input = CoordinateStructures::Direction::UP;
             break;
@@ -81,7 +81,7 @@ void Map::onKeyPressed(int key) {
             break;
     }
     if (snake->changeDirection(input)) updateTimer();
-//    updateSnake();
+    updateSnake();
 }
 
 void Map::createBorder() {
@@ -285,8 +285,13 @@ void Map::checkCollisionWithBody() {
 
 void Map::checkCollisionWithBorder() {
     auto head = snake->getHeadPosition();
-    if (head.x < 0 || head.x > map.cols - steps.cols || head.y < 0 || head.y > map.rows - steps.rows)
-        if (!snake->isOnSteroids() && borderCollision()) onGameOver();
+    if (head.x < 0 || head.x > map.cols - steps.cols || head.y < 0 || head.y > map.rows - steps.rows) {
+        if (!snake->isOnSteroids() && borderCollision()) {
+            std::cout << "here" << std::endl;
+            onGameOver();
+        }
+    }
+
 
     if (head.x < 0) {
         removeBorderInX(head);

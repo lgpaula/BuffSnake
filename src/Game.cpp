@@ -13,6 +13,8 @@ Game::Game(int screenHeight, int screenWidth) : screenHeight(screenHeight), scre
             if (gameRunning) {
                 map->updateMap();
                 overlayMap();
+                cv::imshow("Game", fullscreenDisplay);
+                continue;
             }
             cv::imshow("Game", fullscreenDisplay);
             int key = cv::waitKey(1);
