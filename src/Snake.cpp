@@ -2,8 +2,8 @@
 #include "../include/Snake.hpp"
 #include <algorithm>
 
-Snake::Snake(CoordinateStructures::Pixel coords, const CoordinateStructures::Steps &steps, OnGameOver onGameOver) :
-        headPosition(coords), steps(steps), onGameOver(std::move(onGameOver)) {
+Snake::Snake(CoordinateStructures::Pixel coords, const CoordinateStructures::Steps &steps) :
+        headPosition(coords), steps(steps) {
     body.emplace_front(headPosition.x - steps.cols, headPosition.y);
     body.emplace_front(body.front().x - steps.cols, headPosition.y);
 }
@@ -33,8 +33,6 @@ bool Snake::changeDirection(CoordinateStructures::Direction dir) {
     body.pop_front();
     direction = dir;
 
-    checkCollision();
-
     return true;
 }
 
@@ -57,8 +55,6 @@ void Snake::move() {
 
     body.push_back(prevHead);
     body.pop_front();
-
-    checkCollision();
 }
 
 void Snake::applyEffect(Food::Effect effect) {
@@ -85,18 +81,6 @@ void Snake::setOnSteroids(bool value) {
 
 void Snake::grow() {
     body.push_front(body.front());
-}
-
-void Snake::checkCollision() {
-    auto it = std::find(body.begin(), body.end(), headPosition);
-    if (it != body.end()) {
-        if (onSteroids) {
-            body.erase(body.begin(), ++it);
-            setOnSteroids(false);
-            return;
-        }
-        onGameOver();
-    }
 }
 
 void Snake::setHeadPosition(CoordinateStructures::Pixel newPos) {

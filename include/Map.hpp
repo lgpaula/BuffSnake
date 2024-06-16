@@ -16,21 +16,21 @@ class Map {
 
 public:
 
-    using OnDirectionChange = std::function<void(CoordinateStructures::Direction input)>;
     using OnConsumableEaten = std::function<void(Food::Consumable consumable)>;
     using OnGameOver = std::function<void()>;
-    using OnSnakeMove = std::function<void()>;
 
-    Map(CoordinateStructures::Size dimension, OnDirectionChange onDirectionChange,
-        OnConsumableEaten onConsumableEaten, OnGameOver onGameOver, OnSnakeMove onSnakeMove);
+    Map(std::shared_ptr<Snake>& snake, CoordinateStructures::Size dimension,
+        OnConsumableEaten onConsumableEaten, OnGameOver onGameOver);
 
-    void updateSnake(Snake& snake);
+    void updateSnake();
 
     void updateTimer();
 
     void spawnConsumable(Food::Consumable consumable);
 
-    void updatePoints(int points);
+    cv::Mat getMap() const;
+
+    void updateMap();
 
     ~Map() noexcept;
 
@@ -40,10 +40,10 @@ private:
     void updateBorder();
     void fitToGrid(CoordinateStructures::Pixel &pixel) const;
     void onKeyPressed(int key);
-    void checkCollisionWithBorder(Snake &head);
+    void checkCollisionWithBorder();
     void checkCollisionWithConsumable(CoordinateStructures::Pixel &head);
     void setConsumablePosition(Food::Consumable &consumable);
-    void updateOccupiedSpaces(Snake &snake);
+    void updateOccupiedSpaces();
     void updateConsumables();
     void resizeIcon(Food::Consumable& consumable) const;
     CoordinateStructures::Pixel generatePosition();
@@ -53,14 +53,16 @@ private:
     void removeBorderInY(const CoordinateStructures::Pixel &head);
     void updateGameTick();
     void showPointsOnConsumable(const Food::Consumable& consumable);
-    bool borderCollision(Snake snake);
+    bool borderCollision();
+    void onSnakeMove();
+    void onConsumableCollision(const Food::Consumable& consumable);
+    void checkCollisionWithBody();
 
 private:
+    std::shared_ptr<Snake> snake;
     cv::Mat map;
-    OnDirectionChange onDirectionChange;
     OnConsumableEaten onConsumableEaten;
     OnGameOver onGameOver;
-    OnSnakeMove onSnakeMove;
     CoordinateStructures::Steps steps{};
     std::list<std::pair<CoordinateStructures::Pixel, CoordinateStructures::Pixel>> border{};
     std::chrono::time_point<std::chrono::steady_clock> lastUpdate;

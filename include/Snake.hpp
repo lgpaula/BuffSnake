@@ -12,7 +12,7 @@ class Snake {
 public:
     using OnGameOver = std::function<void()>;
 
-    Snake(CoordinateStructures::Pixel coords, const CoordinateStructures::Steps &steps, OnGameOver onGameOver);
+    Snake(CoordinateStructures::Pixel coords, const CoordinateStructures::Steps &steps);
 
     bool changeDirection(CoordinateStructures::Direction direction);
 
@@ -22,24 +22,22 @@ public:
 
     void applyEffect(Food::Effect effect);
 
-    [[nodiscard]] inline CoordinateStructures::Pixel &getHeadPosition() { return headPosition; }
-
-    [[nodiscard]] inline std::deque<CoordinateStructures::Pixel> &getBody() { return body; }
-
-    inline bool isOnSteroids() const { return onSteroids; };
-
     void setOnSteroids(bool value);
 
     void setHeadPosition(CoordinateStructures::Pixel newPos);
 
-private:
-    void checkCollision();
+    [[nodiscard]] inline CoordinateStructures::Pixel &getHeadPosition() { return headPosition; }
+
+    [[nodiscard]] inline std::deque<CoordinateStructures::Pixel> &getBody() { return body; }
+
+    [[nodiscard]] inline CoordinateStructures::Direction getDirection() { return direction; }
+
+    inline bool isOnSteroids() const { return onSteroids; };
 
 private:
     CoordinateStructures::Pixel headPosition;
     std::deque<CoordinateStructures::Pixel> body;
     CoordinateStructures::Steps steps;
-    OnGameOver onGameOver;
     CoordinateStructures::Direction direction = CoordinateStructures::Direction::RIGHT;
     mutable std::mt19937 engine{std::random_device{}()};
     bool onSteroids = false;

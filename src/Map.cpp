@@ -6,10 +6,11 @@
 #include "../include/Snake.hpp"
 #include <chrono>
 
-Map::Map(CoordinateStructures::Size dimension, Map::OnDirectionChange onDirectionChange,
-         Map::OnConsumableEaten consumableEaten, Map::OnGameOver onGameOver, Map::OnSnakeMove onSnakeMove) :
-         map(cv::Mat::zeros(dimension.height, dimension.width, CV_8UC3)), onDirectionChange(std::move(onDirectionChange)),
-                  onConsumableEaten(std::move(consumableEaten)), onGameOver(std::move(onGameOver)), onSnakeMove(onSnakeMove) {
+Map::Map(std::shared_ptr<Snake>& snake, CoordinateStructures::Size dimension,
+         Map::OnConsumableEaten consumableEaten, Map::OnGameOver onGameOver) :
+         snake(std::move(snake)), map(cv::Mat::zeros(dimension.height, dimension.width, CV_8UC3)),
+                  onConsumableEaten(std::move(consumableEaten)), onGameOver(std::move(onGameOver)) {
+
     steps.cols = map.cols / 20;
     steps.rows = map.rows / 20;
 
@@ -18,20 +19,40 @@ Map::Map(CoordinateStructures::Size dimension, Map::OnDirectionChange onDirectio
 
     lastUpdate = std::chrono::steady_clock::now();
 
-    displayThread = std::thread([this, &onSnakeMove]() {
-        while (true) {
-            cv::imshow("Map", map);
-            int key = cv::waitKey(1);
-            onKeyPressed(key);
+//    int key = cv::waitKey(1);
+//    onKeyPressed(key);
+//    auto now = std::chrono::steady_clock::now();
+//    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastUpdate).count();
+//    if (elapsed >= timeToMove) {
+//        onSnakeMove();
+//        lastUpdate = now;
+//    }
 
-            auto now = std::chrono::steady_clock::now();
-            auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastUpdate).count();
-            if (elapsed >= timeToMove) {
-                onSnakeMove();
-                lastUpdate = now;
-            }
-        }
-    });
+    updateMap();
+
+    updateSnake();
+    Food::Consumable consumable = Food::Consumable{Food::ConsumableType::CHICKEN};
+    spawnConsumable(consumable);
+}
+
+void Map::updateMap() {
+    int key = cv::waitKey(1);
+    onKeyPressed(key);
+    auto now = std::chrono::steady_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastUpdate).count();
+    if (elapsed >= timeToMove) {
+        onSnakeMove();
+        lastUpdate = now;
+    }
+}
+
+cv::Mat Map::getMap() const {
+    return map;
+}
+
+void Map::onSnakeMove() {
+    snake->move();
+    updateSnake();
 }
 
 void Map::updateTimer() {
@@ -39,25 +60,28 @@ void Map::updateTimer() {
 }
 
 void Map::onKeyPressed(int key) {
+    CoordinateStructures::Direction input = snake->getDirection();
     switch (key) {
         case 27:
             cv::destroyAllWindows();
             break;
         case 82:
-            onDirectionChange(CoordinateStructures::Direction::UP);
+            input = CoordinateStructures::Direction::UP;
             break;
         case 84:
-            onDirectionChange(CoordinateStructures::Direction::DOWN);
+            input = CoordinateStructures::Direction::DOWN;
             break;
         case 81:
-            onDirectionChange(CoordinateStructures::Direction::LEFT);
+            input = CoordinateStructures::Direction::LEFT;
             break;
         case 83:
-            onDirectionChange(CoordinateStructures::Direction::RIGHT);
+            input = CoordinateStructures::Direction::RIGHT;
             break;
         default:
             break;
     }
+    if (snake->changeDirection(input)) updateTimer();
+//    updateSnake();
 }
 
 void Map::createBorder() {
@@ -93,10 +117,6 @@ void Map::updateBorder() {
         cv::line(map, cv::Point(b.first.x, b.first.y), cv::Point(b.second.x, b.second.y), cv::Scalar(0, 0, 255), 2);
 }
 
-void Map::updatePoints(int points) {
-    currentPoints += points;
-}
-
 void Map::updateBackground() {
     int iCounter = 0;
     int jCounter = 0;
@@ -128,29 +148,30 @@ cv::Scalar Map::randomize() {
     return out;
 }
 
-void Map::updateSnake(Snake &snake) {
+void Map::updateSnake() {
     updateBackground();
     updateBorder();
     updateConsumables();
 
-    auto head = snake.getHeadPosition();
+    auto head = snake->getHeadPosition();
     fitToGrid(head);
     cv::Point h1 = cv::Point{head.x + 2, head.y + 2};
     cv::Point h2 = cv::Point{head.x + steps.cols - 3, head.y + steps.rows - 3};
-    cv::Scalar headColor = snake.isOnSteroids() ? randomize() : cv::Scalar(255, 0, 0);
+    cv::Scalar headColor = snake->isOnSteroids() ? randomize() : cv::Scalar(255, 0, 0);
     cv::rectangle(map, h1, h2, headColor, -1);
 
-    for (auto& b : snake.getBody()) {
+    for (auto& b : snake->getBody()) {
         fitToGrid(b);
         cv::Point b1 = cv::Point{b.x + 5, b.y + 5};
         cv::Point b2 = cv::Point{b.x + steps.cols - 6, b.y + steps.rows - 6};
-        cv::Scalar bodyColor = snake.isOnSteroids() ? randomize() : cv::Scalar(255, 0, 0);
+        cv::Scalar bodyColor = snake->isOnSteroids() ? randomize() : cv::Scalar(255, 0, 0);
         cv::rectangle(map, b1, b2, bodyColor, -1);
     }
 
-    checkCollisionWithBorder(snake);
+    checkCollisionWithBody();
+    checkCollisionWithBorder();
     checkCollisionWithConsumable(head);
-    updateOccupiedSpaces(snake);
+    updateOccupiedSpaces();
 }
 
 void removeAlpha(cv::Mat& roi, const cv::Mat& icon) {
@@ -176,10 +197,10 @@ void Map::updateConsumables() {
     }
 }
 
-void Map::updateOccupiedSpaces(Snake &snake) {
+void Map::updateOccupiedSpaces() {
     occupiedSpaces.clear();
-    occupiedSpaces.insert(snake.getHeadPosition());
-    for (const auto &b : snake.getBody()) occupiedSpaces.insert(b);
+    occupiedSpaces.insert(snake->getHeadPosition());
+    for (const auto &b : snake->getBody()) occupiedSpaces.insert(b);
     for (const auto &c : consumables) occupiedSpaces.insert(c.position);
 }
 
@@ -198,26 +219,34 @@ void Map::showPointsOnConsumable(const Food::Consumable& consumable) {
     cv::putText(map, "+" + std::to_string(consumable.points), point, cv::FONT_HERSHEY_SIMPLEX, 0.6, cv::Scalar(0, 0, 0), 2);
 }
 
+void Map::onConsumableCollision(const Food::Consumable& consumable) {
+    ++consumablesEaten;
+    spawnConsumableOverTime();
+
+    showPointsOnConsumable(consumable);
+
+    if (consumable.type == Food::ConsumableType::GENETICS) {
+        std::uniform_int_distribution<> chance(1, 3);
+        if (chance(engine) == 1) {
+            timeToMove *= 2;
+            clampTick(timeToMove);
+        }
+    }
+
+    Food::Consumable newConsumable {consumable.type};
+    if (consumable.type == Food::CHICKEN) spawnConsumable(newConsumable);
+
+    consumables.erase(consumable);
+    onConsumableEaten(newConsumable);
+    snake->applyEffect(newConsumable.effect);
+
+    updateGameTick();
+}
+
 void Map::checkCollisionWithConsumable(CoordinateStructures::Pixel &head) {
     for (const auto &c : consumables) {
         if (head.x == c.position.x && head.y == c.position.y) {
-            ++consumablesEaten;
-            spawnConsumableOverTime();
-
-            showPointsOnConsumable(c);
-
-            Food::Consumable newConsumable {c.type};
-            if (c.type == Food::ConsumableType::GENETICS) {
-                std::uniform_int_distribution<> chance(1, 3);
-                if (chance(engine) == 1) {
-                    timeToMove *= 2;
-                    clampTick(timeToMove);
-                }
-            }
-
-            consumables.erase(c);
-            updateGameTick();
-            onConsumableEaten(newConsumable);
+            onConsumableCollision(c);
             break;
         }
     }
@@ -233,43 +262,55 @@ void Map::removeBorderInY(const CoordinateStructures::Pixel &head) {
         (it->first.x == head.x && it->second.x != head.x) ? it = border.erase(it) : ++it;
 }
 
-bool Map::borderCollision(Snake snake) {
+bool Map::borderCollision() {
     for (const auto &b : border) {
-        if (snake.getHeadPosition().x == b.first.x && snake.getHeadPosition().y == b.first.y) return true;
-        if (snake.getHeadPosition().x == b.second.x && snake.getHeadPosition().y == b.second.y) return true;
+        if (snake->getHeadPosition().x == b.first.x && snake->getHeadPosition().y == b.first.y) return true;
+        if (snake->getHeadPosition().x == b.second.x && snake->getHeadPosition().y == b.second.y) return true;
     }
 
     return false;
 }
 
-void Map::checkCollisionWithBorder(Snake &snake) {
-    auto head = snake.getHeadPosition();
+void Map::checkCollisionWithBody() {
+    auto it = std::find(snake->getBody().begin(), snake->getBody().end(), snake->getHeadPosition());
+    if (it != snake->getBody().end()) {
+        if (snake->isOnSteroids()) {
+            snake->getBody().erase(snake->getBody().begin(), ++it);
+            snake->setOnSteroids(false);
+            return;
+        }
+        onGameOver();
+    }
+}
+
+void Map::checkCollisionWithBorder() {
+    auto head = snake->getHeadPosition();
     if (head.x < 0 || head.x > map.cols - steps.cols || head.y < 0 || head.y > map.rows - steps.rows)
-        if (!snake.isOnSteroids() && borderCollision(snake)) onGameOver();
+        if (!snake->isOnSteroids() && borderCollision()) onGameOver();
 
     if (head.x < 0) {
         removeBorderInX(head);
-        snake.setHeadPosition({map.cols - steps.cols, head.y});
-        updateSnake(snake);
-        snake.setOnSteroids(false);
+        snake->setHeadPosition({map.cols - steps.cols, head.y});
+        updateSnake();
+        snake->setOnSteroids(false);
     }
     if (head.x > map.cols - steps.cols) {
         removeBorderInX(head);
-        snake.setHeadPosition({0, head.y});
-        updateSnake(snake);
-        snake.setOnSteroids(false);
+        snake->setHeadPosition({0, head.y});
+        updateSnake();
+        snake->setOnSteroids(false);
     }
     if (head.y < 0) {
         removeBorderInY(head);
-        snake.setHeadPosition({head.x, map.rows - steps.rows});
-        updateSnake(snake);
-        snake.setOnSteroids(false);
+        snake->setHeadPosition({head.x, map.rows - steps.rows});
+        updateSnake();
+        snake->setOnSteroids(false);
     }
     if (head.y > map.rows - steps.rows) {
         removeBorderInY(head);
-        snake.setHeadPosition({head.x, 0});
-        updateSnake(snake);
-        snake.setOnSteroids(false);
+        snake->setHeadPosition({head.x, 0});
+        updateSnake();
+        snake->setOnSteroids(false);
     }
 }
 
@@ -324,5 +365,6 @@ void Map::resizeIcon(Food::Consumable& consumable) const {
 }
 
 Map::~Map() noexcept {
+    cv::destroyAllWindows();
     if (displayThread.joinable()) displayThread.join();
 }
