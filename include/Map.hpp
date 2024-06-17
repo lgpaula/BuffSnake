@@ -26,19 +26,17 @@ public:
 
     void updateTimer();
 
-    void spawnConsumable(Food::Consumable consumable);
-
-    cv::Mat getMap() const;
-
     void updateMap();
 
     ~Map() noexcept;
+
+    inline cv::Mat getMap() const { return map; }
 
 private:
     void updateBackground();
     void createBorder();
     void updateBorder();
-    void fitToGrid(CoordinateStructures::Pixel &pixel) const;
+    void fitToGrid(CoordinateStructures::Pixel& pixel) const;
     void onKeyPressed(int key);
     void checkCollisionWithBorder();
     void checkCollisionWithConsumable(CoordinateStructures::Pixel &head);
@@ -57,6 +55,7 @@ private:
     void onSnakeMove();
     void onConsumableCollision(const Food::Consumable& consumable);
     void checkCollisionWithBody();
+    void spawnConsumable(Food::Consumable& consumable);
 
 private:
     std::shared_ptr<Snake> snake;
@@ -65,14 +64,13 @@ private:
     OnGameOver onGameOver;
     CoordinateStructures::Steps steps{};
     std::list<std::pair<CoordinateStructures::Pixel, CoordinateStructures::Pixel>> border{};
-    std::chrono::time_point<std::chrono::steady_clock> lastUpdate;
+    std::chrono::time_point<std::chrono::steady_clock> lastUpdate = std::chrono::steady_clock::now();
     std::thread displayThread{};
     std::unordered_set<Food::Consumable> consumables;
     std::unordered_set<CoordinateStructures::Pixel> occupiedSpaces;
     std::mt19937 engine{std::random_device{}()};
     int consumablesEaten = 0;
     int timeToMove = 400;
-    int currentPoints = 0;
 };
 
 

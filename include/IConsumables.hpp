@@ -31,7 +31,7 @@ namespace Food {
         int points{};
         cv::Mat icon;
         Effect effect{};
-        CoordinateStructures::Pixel position{};
+        CoordinateStructures::Pixel position{-1, -1};
         //todo add effect duration
         //todo add display duration
 

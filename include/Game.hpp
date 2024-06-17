@@ -13,8 +13,6 @@ public:
 
     void addPoints(int points);
 
-    [[nodiscard]] int getPoints() const;
-
     void gameOver();
 
     void onKeyPressed(int key);
@@ -23,10 +21,11 @@ public:
 
 private:
     void onHowToPlay();
-    void setText();
+    void setMainMenuText();
     void addSelector();
     void startGame();
     void overlayMap();
+    void gameOverScreen();
 
 private:
     int screenHeight;
@@ -39,12 +38,17 @@ private:
     cv::Point mainMenuFirstOption = {screenWidth / 2 - 450, screenHeight / 2 - 250};
     cv::Point mainMenuSecondOption = {screenWidth / 2 - 450, screenHeight / 2 - 200};
     cv::Scalar backgroundColor = {81, 215, 170};
+    cv::Point gameOverPosition = {fullscreenDisplay.cols / 2 - 450, fullscreenDisplay.rows / 2 - 300};
+    cv::Point scorePosition = {fullscreenDisplay.cols / 2 - 450, fullscreenDisplay.rows / 2 - 250};
+    cv::Point playAgainPosition = {fullscreenDisplay.cols / 2 - 450, fullscreenDisplay.rows / 2 - 200};
+    cv::Point returnToMenuPosition = {fullscreenDisplay.cols / 2 - 450, fullscreenDisplay.rows / 2 - 150};
 
     std::shared_ptr<Snake> snake = nullptr;
     std::unique_ptr<Map> map = nullptr;
 
     int gamePoints = 0;
-    bool onInstructions = false;
+    bool onMainMenu = true;
+    bool onGameOver = false;
     bool gameRunning = false;
 };
 

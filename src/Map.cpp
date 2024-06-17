@@ -17,19 +17,7 @@ Map::Map(std::shared_ptr<Snake>& snake, CoordinateStructures::Size dimension,
     updateBackground();
     createBorder();
 
-    lastUpdate = std::chrono::steady_clock::now();
-
-//    int key = cv::waitKey(1);
-//    onKeyPressed(key);
-//    auto now = std::chrono::steady_clock::now();
-//    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastUpdate).count();
-//    if (elapsed >= timeToMove) {
-//        onSnakeMove();
-//        lastUpdate = now;
-//    }
-
     updateMap();
-
     updateSnake();
     Food::Consumable consumable = Food::Consumable{Food::ConsumableType::CHICKEN};
     spawnConsumable(consumable);
@@ -44,10 +32,6 @@ void Map::updateMap() {
         onSnakeMove();
         lastUpdate = now;
     }
-}
-
-cv::Mat Map::getMap() const {
-    return map;
 }
 
 void Map::onSnakeMove() {
@@ -80,8 +64,10 @@ void Map::onKeyPressed(int key) {
         default:
             break;
     }
-    if (snake->changeDirection(input)) updateTimer();
-    updateSnake();
+    if (snake->changeDirection(input)) {
+        updateSnake();
+        updateTimer();
+    }
 }
 
 void Map::createBorder() {
@@ -220,9 +206,6 @@ void Map::showPointsOnConsumable(const Food::Consumable& consumable) {
 }
 
 void Map::onConsumableCollision(const Food::Consumable& consumable) {
-    ++consumablesEaten;
-    spawnConsumableOverTime();
-
     showPointsOnConsumable(consumable);
 
     if (consumable.type == Food::ConsumableType::GENETICS) {
@@ -233,13 +216,12 @@ void Map::onConsumableCollision(const Food::Consumable& consumable) {
         }
     }
 
-    Food::Consumable newConsumable {consumable.type};
-    if (consumable.type == Food::CHICKEN) spawnConsumable(newConsumable);
-
+    onConsumableEaten(consumable);
+    snake->applyEffect(consumable.effect);
     consumables.erase(consumable);
-    onConsumableEaten(newConsumable);
-    snake->applyEffect(newConsumable.effect);
 
+    ++consumablesEaten;
+    spawnConsumableOverTime();
     updateGameTick();
 }
 
@@ -285,13 +267,8 @@ void Map::checkCollisionWithBody() {
 
 void Map::checkCollisionWithBorder() {
     auto head = snake->getHeadPosition();
-    if (head.x < 0 || head.x > map.cols - steps.cols || head.y < 0 || head.y > map.rows - steps.rows) {
-        if (!snake->isOnSteroids() && borderCollision()) {
-            std::cout << "here" << std::endl;
-            onGameOver();
-        }
-    }
 
+    if (!snake->isOnSteroids() && borderCollision()) onGameOver();
 
     if (head.x < 0) {
         removeBorderInX(head);
@@ -320,22 +297,34 @@ void Map::checkCollisionWithBorder() {
 }
 
 void Map::spawnConsumableOverTime() {
+    if (consumablesEaten % 1 == 0) {
+        auto newConsumable = Food::Consumable{Food::ConsumableType::CHICKEN};
+        spawnConsumable(newConsumable);
+    }
+
     if (consumablesEaten % 8 == 0) {
         std::uniform_int_distribution<> chance(0, 1);
-        chance(engine) ? spawnConsumable(Food::Consumable{Food::ConsumableType::PROTEIN}) :
-                        spawnConsumable(Food::Consumable{Food::ConsumableType::CREATINE});
+        if (chance(engine)) {
+            auto newConsumable = Food::Consumable{Food::ConsumableType::PROTEIN};
+            spawnConsumable(newConsumable);
+        } else {
+            auto newConsumable = Food::Consumable{Food::ConsumableType::CREATINE};
+            spawnConsumable(newConsumable);
+        }
     }
 
     if (consumablesEaten % 15 == 0) {
-        spawnConsumable(Food::Consumable{Food::ConsumableType::STEROIDS});
+        auto newConsumable = Food::Consumable{Food::ConsumableType::STEROIDS};
+        spawnConsumable(newConsumable);
     }
 
     if (consumablesEaten % 20 == 0) {
-        spawnConsumable(Food::Consumable{Food::ConsumableType::GENETICS});
+        auto newConsumable = Food::Consumable{Food::ConsumableType::GENETICS};
+        spawnConsumable(newConsumable);
     }
 }
 
-void Map::spawnConsumable(Food::Consumable consumable) {
+void Map::spawnConsumable(Food::Consumable& consumable) {
     resizeIcon(consumable);
     setConsumablePosition(consumable);
 

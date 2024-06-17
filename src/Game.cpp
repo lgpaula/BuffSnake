@@ -6,7 +6,7 @@
 Game::Game(int screenHeight, int screenWidth) : screenHeight(screenHeight), screenWidth(screenWidth) {
         fullscreenDisplay = cv::Mat(screenHeight, screenWidth, CV_8UC3, backgroundColor);
 
-    setText();
+    setMainMenuText();
 
     mainDisplayThread = std::thread([this]() {
         while (true) {
@@ -35,7 +35,7 @@ void Game::overlayMap() {
     map->getMap().copyTo(fullscreenDisplay(roi));
 }
 
-void Game::setText() {
+void Game::setMainMenuText() {
     cv::rectangle(fullscreenDisplay, cv::Point(0, 0), cv::Point(fullscreenDisplay.cols, fullscreenDisplay.rows), backgroundColor, cv::FILLED);
     cv::putText(fullscreenDisplay, "Snake Game", titlePosition, cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 0), 2);
     cv::putText(fullscreenDisplay, "Start", mainMenuFirstOption, cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
@@ -53,32 +53,55 @@ void Game::addSelector() {
 void Game::onKeyPressed(int key) {
     switch (key) {
         case 8:
-            std::cout << "back" << std::endl;
-            if (onInstructions) {
-                onInstructions = false;
-                setText();
+            if (!onMainMenu) {
+                onMainMenu = true;
+                setMainMenuText();
             }
             break;
         case 82:
-            if (onInstructions) break;
-            if (selectorPosition.y == mainMenuSecondOption.y) {
-                selectorPosition.y -= 50;
-                addSelector();
+            if (onMainMenu) {
+                if (selectorPosition.y == mainMenuSecondOption.y) {
+                    selectorPosition.y -= 50;
+                    addSelector();
+                }
+            } else if (onGameOver) {
+                if (selectorPosition.y == returnToMenuPosition.y) {
+                    selectorPosition.y -= 50;
+                    addSelector();
+                }
             }
+
             break;
         case 84:
-            if (onInstructions) break;
-            if (selectorPosition.y == mainMenuFirstOption.y) {
-                selectorPosition.y += 50;
-                addSelector();
+            if (onMainMenu) {
+                if (selectorPosition.y == mainMenuFirstOption.y) {
+                    selectorPosition.y += 50;
+                    addSelector();
+                }
+            } else if (onGameOver) {
+                if (selectorPosition.y == playAgainPosition.y) {
+                    selectorPosition.y += 50;
+                    addSelector();
+                }
             }
+
             break;
         case 13:
-            if (selectorPosition.y == mainMenuFirstOption.y) {
-                startGame();
-            } else if (selectorPosition.y == mainMenuSecondOption.y) {
-                onHowToPlay();
+            if (onMainMenu) {
+                if (selectorPosition.y == mainMenuFirstOption.y) {
+                    startGame();
+                } else if (selectorPosition.y == mainMenuSecondOption.y) {
+                    onHowToPlay();
+                }
+            } else if (onGameOver) {
+                if (selectorPosition.y == playAgainPosition.y) {
+                    startGame();
+                } else if (selectorPosition.y == returnToMenuPosition.y) {
+                    onMainMenu = true;
+                    setMainMenuText();
+                }
             }
+
             break;
         default:
             break;
@@ -86,7 +109,8 @@ void Game::onKeyPressed(int key) {
 }
 
 void Game::onHowToPlay() {
-    onInstructions = true;
+    onMainMenu = false;
+    //todo replace with image
     cv::rectangle(fullscreenDisplay, cv::Point(0, 0), cv::Point(fullscreenDisplay.cols, fullscreenDisplay.rows), backgroundColor, cv::FILLED);
     cv::putText(fullscreenDisplay, "How to play", cv::Point(fullscreenDisplay.cols / 2 - 450, fullscreenDisplay.rows / 2 - 300),
                 cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 0), 2);
@@ -138,14 +162,19 @@ void Game::addPoints(int points) {
     gamePoints += points;
 }
 
-int Game::getPoints() const {
-    return gamePoints;
+void Game::gameOverScreen() {
+    cv::rectangle(fullscreenDisplay, cv::Point(0, 0), cv::Point(fullscreenDisplay.cols, fullscreenDisplay.rows), backgroundColor, cv::FILLED);
+    cv::putText(fullscreenDisplay, "Game Over", gameOverPosition, cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 0), 2);
+    cv::putText(fullscreenDisplay, "Score: " + std::to_string(gamePoints), scorePosition, cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
+    cv::putText(fullscreenDisplay, "Play again", playAgainPosition, cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
+    cv::putText(fullscreenDisplay, "Return to main menu", returnToMenuPosition, cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
 }
 
 void Game::gameOver() {
+    onGameOver = true;
     gameRunning = false;
     std::cout << "Game over" << std::endl;
-    exit(0);
+    gameOverScreen();
 }
 
 Game::~Game() noexcept {
