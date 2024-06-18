@@ -5,6 +5,7 @@
 #include <utility>
 #include "../include/Snake.hpp"
 #include <chrono>
+#include <fstream>
 
 Map::Map(std::shared_ptr<Snake>& snake, CoordinateStructures::Size dimension,
          Map::OnConsumableEaten consumableEaten, Map::OnGameOver onGameOver) :
@@ -111,10 +112,8 @@ void Map::updateBackground() {
         for (int j = 0; j < map.rows; j += steps.rows) {
             cv::Point p1 = cv::Point(i, j);
             cv::Point p2 = cv::Point(i + steps.cols, j + steps.rows);
-            if ((iCounter + jCounter) % 2 == 0)
-                cv::rectangle(map, p1, p2, cv::Scalar(81, 215, 170), -1);
-            else
-                cv::rectangle(map, p1, p2, cv::Scalar(73, 209, 162), -1);
+            cv::Scalar color = (iCounter + jCounter) % 2 == 0 ? cv::Scalar(81, 215, 170) : cv::Scalar(73, 209, 162);
+            cv::rectangle(map, p1, p2, color, -1);
             ++jCounter;
         }
         ++iCounter;
@@ -270,6 +269,9 @@ void Map::checkCollisionWithBorder() { //NOLINT
 
     if (!snake->isOnSteroids() && borderCollision()) onGameOver();
 
+    //todo this is still fucked when going right or down. I'm thinking about doing a whole ass wall
+    //with a brick-like look to it so it's known to be broken
+
     if (head.x < 0) {
         removeBorderInX(head);
         snake->setHeadPosition({map.cols - steps.cols, head.y});
@@ -345,8 +347,8 @@ void Map::setConsumablePosition(Food::Consumable &consumable) {
 }
 
 CoordinateStructures::Pixel Map::generatePosition() {
-    std::uniform_int_distribution<> x(0, (map.cols)); // -1
-    std::uniform_int_distribution<> y(0, (map.rows)); // -1
+    std::uniform_int_distribution<> x(0, (map.cols - 1));
+    std::uniform_int_distribution<> y(0, (map.rows - 1));
 
     CoordinateStructures::Pixel pos = {x(engine), y(engine)};
 
@@ -356,9 +358,4 @@ CoordinateStructures::Pixel Map::generatePosition() {
 
 void Map::resizeIcon(Food::Consumable& consumable) const {
     cv::resize(consumable.icon, consumable.icon, cv::Size(steps.cols - 4, steps.rows - 4));
-}
-
-Map::~Map() noexcept {
-    cv::destroyAllWindows();
-    if (displayThread.joinable()) displayThread.join();
 }

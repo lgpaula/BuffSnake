@@ -28,7 +28,7 @@ public:
 
     void updateMap();
 
-    ~Map() noexcept;
+    ~Map() noexcept = default;
 
     inline cv::Mat getMap() const { return map; }
 
@@ -65,7 +65,6 @@ private:
     CoordinateStructures::Steps steps{};
     std::list<std::pair<CoordinateStructures::Pixel, CoordinateStructures::Pixel>> border{};
     std::chrono::time_point<std::chrono::steady_clock> lastUpdate = std::chrono::steady_clock::now();
-    std::thread displayThread{};
     std::unordered_set<Food::Consumable> consumables;
     std::unordered_set<CoordinateStructures::Pixel> occupiedSpaces;
     std::mt19937 engine{std::random_device{}()};
