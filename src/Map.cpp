@@ -134,7 +134,7 @@ cv::Scalar Map::randomize() {
     return out;
 }
 
-void Map::updateSnake() {
+void Map::updateSnake() { //NOLINT
     updateBackground();
     updateBorder();
     updateConsumables();
@@ -265,7 +265,7 @@ void Map::checkCollisionWithBody() {
     }
 }
 
-void Map::checkCollisionWithBorder() {
+void Map::checkCollisionWithBorder() { //NOLINT
     auto head = snake->getHeadPosition();
 
     if (!snake->isOnSteroids() && borderCollision()) onGameOver();

@@ -26,6 +26,13 @@ private:
     void startGame();
     void overlayMap();
     void gameOverScreen();
+    void handleBackspace();
+    void handleKeyR();
+    void handleKeyT();
+    void handleEnter();
+    void moveSelectorUp(int positionY);
+    void moveSelectorDown(int positionY);
+
 
 private:
     int screenHeight;
@@ -37,7 +44,6 @@ private:
     cv::Point titlePosition = {screenWidth / 2 - 450, screenHeight / 2 - 300};
     cv::Point mainMenuFirstOption = {screenWidth / 2 - 450, screenHeight / 2 - 250};
     cv::Point mainMenuSecondOption = {screenWidth / 2 - 450, screenHeight / 2 - 200};
-    cv::Scalar backgroundColor = {81, 215, 170};
     cv::Point gameOverPosition = {fullscreenDisplay.cols / 2 - 450, fullscreenDisplay.rows / 2 - 300};
     cv::Point scorePosition = {fullscreenDisplay.cols / 2 - 450, fullscreenDisplay.rows / 2 - 250};
     cv::Point playAgainPosition = {fullscreenDisplay.cols / 2 - 450, fullscreenDisplay.rows / 2 - 200};
@@ -50,6 +56,15 @@ private:
     bool onMainMenu = true;
     bool onGameOver = false;
     bool gameRunning = false;
+
+    static constexpr int KEY_BACKSPACE = 8;
+    static constexpr int KEY_UP = 82;
+    static constexpr int KEY_DOWN = 84;
+    static constexpr int KEY_ENTER = 13;
+    const cv::Scalar backgroundColor = {73, 209, 162};
+    const cv::Scalar white = {255, 255, 255};
+    const cv::Scalar black = {0, 0, 0};
+
 };
 
 
