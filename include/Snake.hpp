@@ -10,8 +10,6 @@
 class Snake {
 
 public:
-    using OnGameOver = std::function<void()>;
-
     Snake(CoordinateStructures::Pixel coords, const CoordinateStructures::Steps &steps);
 
     bool changeDirection(CoordinateStructures::Direction direction);

@@ -32,6 +32,7 @@ private:
     void handleEnter();
     void moveSelectorUp();
     void moveSelectorDown();
+    void resetElements();
 
 
 private:
@@ -56,6 +57,7 @@ private:
     bool onMainMenu = true;
     bool onGameOver = false;
     bool gameRunning = false;
+    bool resetElementsFlag = true;
 
     static constexpr int KEY_BACKSPACE = 8;
     static constexpr int KEY_UP = 82;

@@ -9,7 +9,6 @@ Game::Game(int screenHeight, int screenWidth) : screenHeight(screenHeight), scre
     setMainMenuText();
 
     mainDisplayThread = std::thread([this]() {
-        bool first = true;
         while (true) {
             if (gameRunning) {
                 map->updateMap();
@@ -17,8 +16,8 @@ Game::Game(int screenHeight, int screenWidth) : screenHeight(screenHeight), scre
                 cv::imshow("Game", fullscreenDisplay);
                 continue;
             }
-            if (onGameOver && first) {
-                first = false;
+            if (onGameOver && resetElementsFlag) {
+                resetElementsFlag = false;
                 setGameOverScreen();
                 if (map != nullptr) map.reset();
                 if (snake != nullptr) snake.reset();
@@ -191,6 +190,7 @@ void Game::gameOver() {
     onGameOver = true;
     onMainMenu = false;
     gameRunning = false;
+    resetElementsFlag = true;
 }
 
 Game::~Game() noexcept {
