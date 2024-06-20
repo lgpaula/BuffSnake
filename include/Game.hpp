@@ -22,16 +22,16 @@ public:
 private:
     void onHowToPlay();
     void setMainMenuText();
-    void addSelector();
+    void addSelector(int height);
     void startGame();
     void overlayMap();
-    void gameOverScreen();
+    void setGameOverScreen();
     void handleBackspace();
-    void handleKeyR();
-    void handleKeyT();
+    void handleKeyUp();
+    void handleKeyDown();
     void handleEnter();
-    void moveSelectorUp(int positionY);
-    void moveSelectorDown(int positionY);
+    void moveSelectorUp();
+    void moveSelectorDown();
 
 
 private:
@@ -44,10 +44,10 @@ private:
     cv::Point titlePosition = {screenWidth / 2 - 450, screenHeight / 2 - 300};
     cv::Point mainMenuFirstOption = {screenWidth / 2 - 450, screenHeight / 2 - 250};
     cv::Point mainMenuSecondOption = {screenWidth / 2 - 450, screenHeight / 2 - 200};
-    cv::Point gameOverPosition = {fullscreenDisplay.cols / 2 - 450, fullscreenDisplay.rows / 2 - 300};
-    cv::Point scorePosition = {fullscreenDisplay.cols / 2 - 450, fullscreenDisplay.rows / 2 - 250};
-    cv::Point playAgainPosition = {fullscreenDisplay.cols / 2 - 450, fullscreenDisplay.rows / 2 - 200};
-    cv::Point returnToMenuPosition = {fullscreenDisplay.cols / 2 - 450, fullscreenDisplay.rows / 2 - 150};
+    cv::Point gameOverPosition = {screenWidth / 2 - 450, screenHeight / 2 - 300};
+    cv::Point scorePosition = {screenWidth / 2 - 450, screenHeight / 2 - 250};
+    cv::Point playAgainPosition = {screenWidth / 2 - 450, screenHeight / 2 - 200};
+    cv::Point returnToMenuPosition = {screenWidth / 2 - 450, screenHeight / 2 - 150};
 
     std::shared_ptr<Snake> snake = nullptr;
     std::unique_ptr<Map> map = nullptr;
