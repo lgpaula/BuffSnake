@@ -2,38 +2,37 @@
 #include "include/Map.hpp"
 #include "include/Game.hpp"
 #include "include/Snake.hpp"
+#include <X11/Xlib.h>
 
 int main() {
-    cv::Mat window = cv::Mat::zeros(720, 1080, CV_8UC3);
 
-    CoordinateStructures::Size dimension = {500, 500};
-    CoordinateStructures::Steps steps = {dimension.width / 20, dimension.height / 20};
+    Display* display = XOpenDisplay(nullptr);
+    if (display == nullptr) {
+        std::cerr << "Cannot open display" << std::endl;
+        return 1;
+    }
 
-    Game game(window);
+    Screen* screen = DefaultScreenOfDisplay(display);
+    int screenWidth = screen->width;
+    int screenHeight = screen->height;
+    std::cout << "screenHeight: " << screenHeight << " screenWidth: " << screenWidth << std::endl;
 
-    CoordinateStructures::Pixel coords = {dimension.width / 2, dimension.height / 2};
-    Snake snake(coords, steps, [&game]() {
-        game.gameOver();
-    });
+    std::unique_ptr<Game> game = std::make_unique<Game>(1080, 1920);
 
-    Map map(dimension, [&snake, &map](CoordinateStructures::Direction input) {
-        if (snake.changeDirection(input)) map.updateTimer();
-        map.updateSnake(snake);
-    }, [&game, &map, &snake](const Food::Consumable& consumable) {
-        game.addPoints(consumable.points);
-        if (consumable.type == Food::CHICKEN) map.spawnConsumable(consumable);
-        snake.applyEffect(consumable.effect);
-        map.updatePoints(game.getPoints());
-    }, [&game]() {
-        game.gameOver();
-    }, [&snake, &map]() {
-        snake.move();
-        map.updateSnake(snake);
-    });
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
-    map.updateSnake(snake);
-    Food::Consumable consumable = Food::Consumable{Food::ConsumableType::CHICKEN};
-    map.spawnConsumable(consumable);
+    XCloseDisplay(display);
 
     return 0;
+
+    /*
+     * add bricks which tilt on steroids.
+     * steroids go super saiyan?
+     * head and tail are different sprites
+     * icons split into folders
+     * timers
+     * score at all times
+     * screen size
+     * levels
+     */
 }

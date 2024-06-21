@@ -16,34 +16,32 @@ class Map {
 
 public:
 
-    using OnDirectionChange = std::function<void(CoordinateStructures::Direction input)>;
     using OnConsumableEaten = std::function<void(Food::Consumable consumable)>;
     using OnGameOver = std::function<void()>;
-    using OnSnakeMove = std::function<void()>;
 
-    Map(CoordinateStructures::Size dimension, OnDirectionChange onDirectionChange,
-        OnConsumableEaten onConsumableEaten, OnGameOver onGameOver, OnSnakeMove onSnakeMove);
+    Map(std::shared_ptr<Snake>& snake, CoordinateStructures::Size dimension,
+        OnConsumableEaten onConsumableEaten, OnGameOver onGameOver);
 
-    void updateSnake(Snake& snake);
+    void updateSnake();
 
     void updateTimer();
 
-    void spawnConsumable(Food::Consumable consumable);
+    void updateMap();
 
-    void updatePoints(int points);
+    ~Map() noexcept = default;
 
-    ~Map() noexcept;
+    inline cv::Mat getMap() const { return map; }
 
 private:
     void updateBackground();
     void createBorder();
     void updateBorder();
-    void fitToGrid(CoordinateStructures::Pixel &pixel) const;
+    void fitToGrid(CoordinateStructures::Pixel& pixel) const;
     void onKeyPressed(int key);
-    void checkCollisionWithBorder(Snake &head);
+    void checkCollisionWithBorder();
     void checkCollisionWithConsumable(CoordinateStructures::Pixel &head);
     void setConsumablePosition(Food::Consumable &consumable);
-    void updateOccupiedSpaces(Snake &snake);
+    void updateOccupiedSpaces();
     void updateConsumables();
     void resizeIcon(Food::Consumable& consumable) const;
     CoordinateStructures::Pixel generatePosition();
@@ -53,24 +51,25 @@ private:
     void removeBorderInY(const CoordinateStructures::Pixel &head);
     void updateGameTick();
     void showPointsOnConsumable(const Food::Consumable& consumable);
-    bool borderCollision(Snake snake);
+    bool borderCollision();
+    void onSnakeMove();
+    void onConsumableCollision(const Food::Consumable& consumable);
+    void checkCollisionWithBody();
+    void spawnConsumable(Food::Consumable& consumable);
 
 private:
+    std::shared_ptr<Snake> snake;
     cv::Mat map;
-    OnDirectionChange onDirectionChange;
     OnConsumableEaten onConsumableEaten;
     OnGameOver onGameOver;
-    OnSnakeMove onSnakeMove;
     CoordinateStructures::Steps steps{};
     std::list<std::pair<CoordinateStructures::Pixel, CoordinateStructures::Pixel>> border{};
-    std::chrono::time_point<std::chrono::steady_clock> lastUpdate;
-    std::thread displayThread{};
+    std::chrono::time_point<std::chrono::steady_clock> lastUpdate = std::chrono::steady_clock::now();
     std::unordered_set<Food::Consumable> consumables;
     std::unordered_set<CoordinateStructures::Pixel> occupiedSpaces;
     std::mt19937 engine{std::random_device{}()};
     int consumablesEaten = 0;
     int timeToMove = 400;
-    int currentPoints = 0;
 };
 
 
