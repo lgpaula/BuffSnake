@@ -32,8 +32,6 @@ private:
     void handleEnter();
     void moveSelectorUp();
     void moveSelectorDown();
-    void resetElements();
-
 
 private:
     int screenHeight;
@@ -49,6 +47,7 @@ private:
     cv::Point scorePosition = {screenWidth / 2 - 450, screenHeight / 2 - 250};
     cv::Point playAgainPosition = {screenWidth / 2 - 450, screenHeight / 2 - 200};
     cv::Point returnToMenuPosition = {screenWidth / 2 - 450, screenHeight / 2 - 150};
+    cv::Point mapPosition = {screenWidth / 2 - 250, screenHeight / 2 - 250};
 
     std::shared_ptr<Snake> snake = nullptr;
     std::unique_ptr<Map> map = nullptr;

@@ -34,7 +34,6 @@ Game::Game(int screenHeight, int screenWidth) : screenHeight(screenHeight), scre
 void Game::overlayMap() {
     cv::rectangle(fullscreenDisplay, cv::Point(0, 0), cv::Point(fullscreenDisplay.cols, fullscreenDisplay.rows), backgroundColor, cv::FILLED);
 
-    cv::Point mapPosition = {screenWidth / 2 - 250, screenHeight / 2 - 250};
     cv::Rect roi(mapPosition, map->getMap().size());
     map->getMap().copyTo(fullscreenDisplay(roi));
 }
@@ -181,7 +180,6 @@ void Game::setGameOverScreen() {
     cv::putText(fullscreenDisplay, "Score: " + std::to_string(gamePoints), scorePosition, cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
     cv::putText(fullscreenDisplay, "Play again", playAgainPosition, cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
     cv::putText(fullscreenDisplay, "Return to main menu", returnToMenuPosition, cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
-    std::cout << "play again position: " << playAgainPosition.y << std::endl;
     addSelector(playAgainPosition.y);
 }
 
