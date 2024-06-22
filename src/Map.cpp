@@ -9,11 +9,9 @@
 
 Map::Map(std::shared_ptr<Snake>& snake, CoordinateStructures::Size dimension,
          Map::OnConsumableEaten consumableEaten, Map::OnGameOver onGameOver) :
-         snake(std::move(snake)), map(cv::Mat::zeros(dimension.height, dimension.width, CV_8UC3)),
-                  onConsumableEaten(std::move(consumableEaten)), onGameOver(std::move(onGameOver)) {
+         snake(std::move(snake)), onConsumableEaten(std::move(consumableEaten)), onGameOver(std::move(onGameOver)) {
 
-    steps.cols = map.cols / 20;
-    steps.rows = map.rows / 20;
+    map = cv::Mat::zeros(dimension.height * pixelPerSquare, dimension.width * pixelPerSquare, CV_8UC3);
 
     updateBackground();
     createBorder();
@@ -72,57 +70,42 @@ void Map::onKeyPressed(int key) {
 }
 
 void Map::createBorder() {
-    for (int i = 0; i < map.cols; i += steps.cols) {
-        CoordinateStructures::Pixel p1 = {i, 0};
-        CoordinateStructures::Pixel p2 = {i + steps.cols - 1, 0};
-        border.emplace_back(p1, p2);
+    for (int i = 0; i < map.cols; i += pixelPerSquare) {
+        border.emplace_back(i, 0);
+        border.emplace_back(i, map.rows - pixelPerSquare);
     }
-
-    for (int i = 0; i < map.cols; i += steps.cols) {
-        CoordinateStructures::Pixel p1 = {i, map.rows - 1};
-        CoordinateStructures::Pixel p2 = {i + steps.cols - 1, map.rows - 1};
-        border.emplace_back(p1, p2);
-    }
-
-    for (int i = 0; i < map.rows; i += steps.rows) {
-        CoordinateStructures::Pixel p1 = {0, i};
-        CoordinateStructures::Pixel p2 = {0, i + steps.rows - 1};
-        border.emplace_back(p1, p2);
-    }
-
-    for (int i = 0; i < map.rows; i += steps.rows) {
-        CoordinateStructures::Pixel p1 = {map.cols - 1, i};
-        CoordinateStructures::Pixel p2 = {map.cols - 1, i + steps.rows - 1};
-        border.emplace_back(p1, p2);
+    for (int i = 0; i < map.rows; i += pixelPerSquare) {
+        border.emplace_back(0, i);
+        border.emplace_back(map.cols - pixelPerSquare, i);
     }
 
     updateBorder();
 }
 
 void Map::updateBorder() {
-    for (const auto &b: border)
-        cv::line(map, cv::Point(b.first.x, b.first.y), cv::Point(b.second.x, b.second.y), cv::Scalar(0, 0, 255), 2);
+    for (const auto &b: border) {
+        cv::Point point = cv::Point{b.x, b.y};
+        resizeIcon(wall);
+        cv::Mat roi = map(cv::Rect(point.x + 2, point.y + 2, wall.cols, wall.rows));
+        removeAlpha(roi, wall);
+    }
 }
 
 void Map::updateBackground() {
     int iCounter = 0;
     int jCounter = 0;
 
-    for (int i = 0; i < map.cols; i += steps.cols) {
-        for (int j = 0; j < map.rows; j += steps.rows) {
+    for (int i = 0; i < map.cols; i += pixelPerSquare) {
+        for (int j = 0; j < map.rows; j += pixelPerSquare) {
             cv::Point p1 = cv::Point(i, j);
-            cv::Point p2 = cv::Point(i + steps.cols, j + steps.rows);
+            cv::Point p2 = cv::Point(i + pixelPerSquare - 1, j + pixelPerSquare - 1);
             cv::Scalar color = (iCounter + jCounter) % 2 == 0 ? cv::Scalar(81, 215, 170) : cv::Scalar(73, 209, 162);
             cv::rectangle(map, p1, p2, color, -1);
             ++jCounter;
         }
         ++iCounter;
+        jCounter = 0;
     }
-}
-
-void Map::fitToGrid(CoordinateStructures::Pixel &pixel) const {
-    pixel.x = pixel.x - (pixel.x % steps.cols);
-    pixel.y = pixel.y - (pixel.y % steps.rows);
 }
 
 cv::Scalar Map::randomize() {
@@ -135,20 +118,20 @@ cv::Scalar Map::randomize() {
 
 void Map::updateSnake() { //NOLINT
     updateBackground();
-    updateBorder();
+    updateBorder(); //todo remove this?
     updateConsumables();
 
-    auto head = snake->getHeadPosition();
-    fitToGrid(head);
-    cv::Point h1 = cv::Point{head.x + 2, head.y + 2};
-    cv::Point h2 = cv::Point{head.x + steps.cols - 3, head.y + steps.rows - 3};
+    auto head = snake->getHeadPosition() * pixelPerSquare; //problem
+
+    cv::Point h1 = cv::Point{(head.x) + 2, (head.y) + 2};
+    cv::Point h2 = cv::Point{(head.x + pixelPerSquare) - 3, (head.y + pixelPerSquare) - 3};
     cv::Scalar headColor = snake->isOnSteroids() ? randomize() : cv::Scalar(255, 0, 0);
     cv::rectangle(map, h1, h2, headColor, -1);
 
-    for (auto& b : snake->getBody()) {
-        fitToGrid(b);
-        cv::Point b1 = cv::Point{b.x + 5, b.y + 5};
-        cv::Point b2 = cv::Point{b.x + steps.cols - 6, b.y + steps.rows - 6};
+    for (auto b : snake->getBody()) {
+        b *= pixelPerSquare;
+        cv::Point b1 = cv::Point{(b.x) + 5, (b.y) + 5};
+        cv::Point b2 = cv::Point{(b.x + pixelPerSquare) - 6, (b.y + pixelPerSquare) - 6};
         cv::Scalar bodyColor = snake->isOnSteroids() ? randomize() : cv::Scalar(255, 0, 0);
         cv::rectangle(map, b1, b2, bodyColor, -1);
     }
@@ -159,7 +142,7 @@ void Map::updateSnake() { //NOLINT
     updateOccupiedSpaces();
 }
 
-void removeAlpha(cv::Mat& roi, const cv::Mat& icon) {
+void Map::removeAlpha(cv::Mat& roi, const cv::Mat& icon) {
     std::vector<cv::Mat> channels;
     cv::split(icon, channels);
     cv::Mat alpha = channels[3];
@@ -187,6 +170,7 @@ void Map::updateOccupiedSpaces() {
     occupiedSpaces.insert(snake->getHeadPosition());
     for (const auto &b : snake->getBody()) occupiedSpaces.insert(b);
     for (const auto &c : consumables) occupiedSpaces.insert(c.position);
+    for (const auto &b : border) occupiedSpaces.insert(b);
 }
 
 void clampTick(int &timeToMove) {
@@ -200,7 +184,7 @@ void Map::updateGameTick() {
 }
 
 void Map::showPointsOnConsumable(const Food::Consumable& consumable) {
-    cv::Point point = cv::Point{consumable.position.x, consumable.position.y};
+    cv::Point point = cv::Point{consumable.position.x * pixelPerSquare, consumable.position.y * pixelPerSquare};
     cv::putText(map, "+" + std::to_string(consumable.points), point, cv::FONT_HERSHEY_SIMPLEX, 0.6, cv::Scalar(0, 0, 0), 2);
 }
 
@@ -233,25 +217,6 @@ void Map::checkCollisionWithConsumable(CoordinateStructures::Pixel &head) {
     }
 }
 
-void Map::removeBorderInX(const CoordinateStructures::Pixel &head) {
-    for (auto it = border.begin(); it != border.end(); )
-        (it->first.y == head.y && it->second.y != head.y) ? it = border.erase(it) : ++it;
-}
-
-void Map::removeBorderInY(const CoordinateStructures::Pixel &head) {
-    for (auto it = border.begin(); it != border.end(); )
-        (it->first.x == head.x && it->second.x != head.x) ? it = border.erase(it) : ++it;
-}
-
-bool Map::borderCollision() {
-    for (const auto &b : border) {
-        if (snake->getHeadPosition().x == b.first.x && snake->getHeadPosition().y == b.first.y) return true;
-        if (snake->getHeadPosition().x == b.second.x && snake->getHeadPosition().y == b.second.y) return true;
-    }
-
-    return false;
-}
-
 void Map::checkCollisionWithBody() {
     auto it = std::find(snake->getBody().begin(), snake->getBody().end(), snake->getHeadPosition());
     if (it != snake->getBody().end()) {
@@ -264,38 +229,62 @@ void Map::checkCollisionWithBody() {
     }
 }
 
+void Map::removeBorder(const CoordinateStructures::Pixel &head) {
+    for (auto it = border.begin(); it != border.end();)
+        (it->x == head.x && it->y == head.y) ? it = border.erase(it) : ++it;
+
+    updateBorder();
+}
+
+bool Map::borderCollision() {
+    auto head = snake->getHeadPosition() * pixelPerSquare;
+
+    for (const auto &b : border) {
+        if (head == b) {
+            removeBorder(head);
+            return true;
+        }
+    }
+
+    return false;
+}
+
 void Map::checkCollisionWithBorder() { //NOLINT
-    auto head = snake->getHeadPosition();
+    auto head = snake->getHeadPosition() * pixelPerSquare;
 
-    if (!snake->isOnSteroids() && borderCollision()) onGameOver();
-
-    //todo this is still fucked when going right or down. I'm thinking about doing a whole ass wall
-    //with a brick-like look to it so it's known to be broken
+    if (borderCollision() && !snake->isOnSteroids()) onGameOver();
 
     if (head.x < 0) {
-        removeBorderInX(head);
-        snake->setHeadPosition({map.cols - steps.cols, head.y});
+        head.x += pixelPerSquare;
+        updateOccupiedSpaces();
+        snake->setHeadPosition({(map.cols - pixelPerSquare) / pixelPerSquare, head.y / pixelPerSquare});
         updateSnake();
         snake->setOnSteroids(false);
     }
-    if (head.x > map.cols - steps.cols) {
-        removeBorderInX(head);
-        snake->setHeadPosition({0, head.y});
+    if (head.x > map.cols - pixelPerSquare) {
+        head.x -= pixelPerSquare;
+        updateOccupiedSpaces();
+        snake->setHeadPosition({0, head.y / pixelPerSquare});
         updateSnake();
         snake->setOnSteroids(false);
     }
     if (head.y < 0) {
-        removeBorderInY(head);
-        snake->setHeadPosition({head.x, map.rows - steps.rows});
+        head.y += pixelPerSquare;
+        updateOccupiedSpaces();
+        snake->setHeadPosition({head.x / pixelPerSquare, (map.rows - pixelPerSquare) / pixelPerSquare});
         updateSnake();
         snake->setOnSteroids(false);
     }
-    if (head.y > map.rows - steps.rows) {
-        removeBorderInY(head);
-        snake->setHeadPosition({head.x, 0});
+    if (head.y > map.rows - pixelPerSquare) {
+        head.y -= pixelPerSquare;
+        updateOccupiedSpaces();
+        snake->setHeadPosition({head.x / pixelPerSquare, 0});
         updateSnake();
         snake->setOnSteroids(false);
     }
+
+    updateSnake();
+    snake->setOnSteroids(false);
 }
 
 void Map::spawnConsumableOverTime() {
@@ -327,11 +316,10 @@ void Map::spawnConsumableOverTime() {
 }
 
 void Map::spawnConsumable(Food::Consumable& consumable) {
-    resizeIcon(consumable);
+    resizeIcon(consumable.icon);
     setConsumablePosition(consumable);
 
     occupiedSpaces.insert(consumable.position);
-    fitToGrid(consumable.position);
     consumables.insert(consumable);
     updateConsumables();
 }
@@ -346,6 +334,11 @@ void Map::setConsumablePosition(Food::Consumable &consumable) {
     consumable.position = pos;
 }
 
+void Map::fitToGrid(CoordinateStructures::Pixel &pixel) {
+    pixel.x -= (pixel.x % pixelPerSquare);
+    pixel.y -= (pixel.y % pixelPerSquare);
+}
+
 CoordinateStructures::Pixel Map::generatePosition() {
     std::uniform_int_distribution<> x(0, (map.cols - 1));
     std::uniform_int_distribution<> y(0, (map.rows - 1));
@@ -356,6 +349,6 @@ CoordinateStructures::Pixel Map::generatePosition() {
     return pos;
 }
 
-void Map::resizeIcon(Food::Consumable& consumable) const {
-    cv::resize(consumable.icon, consumable.icon, cv::Size(steps.cols - 4, steps.rows - 4));
+void Map::resizeIcon(cv::Mat& icon) {
+    cv::resize(icon, icon, cv::Size(pixelPerSquare - 4, pixelPerSquare - 4));
 }

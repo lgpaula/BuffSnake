@@ -158,9 +158,9 @@ void Game::onHowToPlay() { //NOLINT
 }
 
 void Game::startGame() {
-    auto size = CoordinateStructures::Size{500, 500};
+    auto size = CoordinateStructures::Size{25, 25};
 
-    snake = std::make_shared<Snake>(CoordinateStructures::Pixel{size.width / 2, size.height / 2}, CoordinateStructures::Steps{size.width / 20, size.height / 20});
+    snake = std::make_shared<Snake>(CoordinateStructures::Pixel{size.width / 2, size.height / 2});
     map = std::make_unique<Map>(snake, size, [this](const Food::Consumable& consumable) {
         addPoints(consumable.points);
     }, [this]() {

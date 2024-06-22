@@ -1,10 +1,9 @@
 #include "../include/Snake.hpp"
 #include <algorithm>
 
-Snake::Snake(CoordinateStructures::Pixel coords, const CoordinateStructures::Steps &steps) :
-        headPosition(coords), steps(steps) {
-    body.emplace_front(headPosition.x - steps.cols, headPosition.y);
-    body.emplace_front(body.front().x - steps.cols, headPosition.y);
+Snake::Snake(CoordinateStructures::Pixel coords) : headPosition(coords) {
+    body.emplace_front(headPosition.x - 1, headPosition.y);
+    body.emplace_front(body.front().x - 1, headPosition.y);
 }
 
 bool Snake::changeDirection(CoordinateStructures::Direction dir) {
@@ -12,19 +11,19 @@ bool Snake::changeDirection(CoordinateStructures::Direction dir) {
     switch (dir) {
         case CoordinateStructures::Direction::UP:
             if (direction == CoordinateStructures::Direction::DOWN || direction == CoordinateStructures::Direction::UP) return false;
-            headPosition.y -= steps.rows;
+            --headPosition.y;
             break;
         case CoordinateStructures::DOWN:
             if (direction == CoordinateStructures::Direction::UP || direction == CoordinateStructures::Direction::DOWN) return false;
-            headPosition.y += steps.rows;
+            ++headPosition.y;
             break;
         case CoordinateStructures::LEFT:
             if (direction == CoordinateStructures::Direction::RIGHT || direction == CoordinateStructures::Direction::LEFT) return false;
-            headPosition.x -= steps.cols;
+            --headPosition.x;
             break;
         case CoordinateStructures::RIGHT:
             if (direction == CoordinateStructures::Direction::LEFT || direction == CoordinateStructures::Direction::RIGHT) return false;
-            headPosition.x += steps.cols;
+            ++headPosition.x;
             break;
     }
 
@@ -39,16 +38,16 @@ void Snake::move() {
     const auto prevHead = headPosition;
     switch (direction) {
         case CoordinateStructures::Direction::UP:
-            headPosition.y -= steps.rows;
+            --headPosition.y;
             break;
         case CoordinateStructures::DOWN:
-            headPosition.y += steps.rows;
+            ++headPosition.y;
             break;
         case CoordinateStructures::LEFT:
-            headPosition.x -= steps.cols;
+            --headPosition.x;
             break;
         case CoordinateStructures::RIGHT:
-            headPosition.x += steps.cols;
+            ++headPosition.x;
             break;
     }
 
