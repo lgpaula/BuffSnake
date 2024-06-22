@@ -13,8 +13,8 @@ Map::Map(std::shared_ptr<Snake>& snake, CoordinateStructures::Size dimension,
 
     map = cv::Mat::zeros(dimension.height * pixelPerSquare, dimension.width * pixelPerSquare, CV_8UC3);
 
-    updateBackground();
     createBorder();
+    updateBackground();
 
     updateMap();
     updateSnake();
@@ -106,6 +106,9 @@ void Map::updateBackground() {
         ++iCounter;
         jCounter = 0;
     }
+
+    updateBorder();
+    updateConsumables();
 }
 
 cv::Scalar Map::randomize() {
@@ -118,8 +121,6 @@ cv::Scalar Map::randomize() {
 
 void Map::updateSnake() { //NOLINT
     updateBackground();
-    updateBorder(); //todo remove this?
-    updateConsumables();
 
     auto head = snake->getHeadPosition() * pixelPerSquare; //problem
 
@@ -283,8 +284,6 @@ void Map::checkCollisionWithBorder() { //NOLINT
         snake->setOnSteroids(false);
     }
 
-    updateSnake();
-    snake->setOnSteroids(false);
 }
 
 void Map::spawnConsumableOverTime() {
@@ -304,7 +303,7 @@ void Map::spawnConsumableOverTime() {
         }
     }
 
-    if (consumablesEaten % 15 == 0) {
+    if (consumablesEaten % 1 == 0) {
         auto newConsumable = Food::Consumable{Food::ConsumableType::STEROIDS};
         spawnConsumable(newConsumable);
     }
