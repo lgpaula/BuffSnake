@@ -25,6 +25,7 @@ Map::Map(std::shared_ptr<Snake>& snake, CoordinateStructures::Size dimension,
 void Map::updateMap() {
     int key = cv::waitKey(1);
     onKeyPressed(key);
+    if (paused) return;
     auto now = std::chrono::steady_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastUpdate).count();
     if (elapsed >= timeToMove) {
@@ -49,16 +50,23 @@ void Map::onKeyPressed(int key) {
             cv::destroyAllWindows();
             exit(0);
         case 82:
+            if (paused) return;
             input = CoordinateStructures::Direction::UP;
             break;
         case 84:
+            if (paused) return;
             input = CoordinateStructures::Direction::DOWN;
             break;
         case 81:
+            if (paused) return;
             input = CoordinateStructures::Direction::LEFT;
             break;
         case 83:
+            if (paused) return;
             input = CoordinateStructures::Direction::RIGHT;
+            break;
+        case 32:
+            paused = !paused;
             break;
         default:
             break;
@@ -122,7 +130,7 @@ cv::Scalar Map::randomize() {
 void Map::updateSnake() { //NOLINT
     updateBackground();
 
-    auto head = snake->getHeadPosition() * pixelPerSquare; //problem
+    auto head = snake->getHeadPosition() * pixelPerSquare;
 
     cv::Point h1 = cv::Point{(head.x) + 2, (head.y) + 2};
     cv::Point h2 = cv::Point{(head.x + pixelPerSquare) - 3, (head.y + pixelPerSquare) - 3};
@@ -138,7 +146,8 @@ void Map::updateSnake() { //NOLINT
     }
 
     checkCollisionWithBody();
-    checkCollisionWithBorder();
+    borderCollision();
+    checkOutOfBounds();
     checkCollisionWithConsumable(head);
     updateOccupiedSpaces();
 }
@@ -230,60 +239,57 @@ void Map::checkCollisionWithBody() {
     }
 }
 
-void Map::removeBorder(const CoordinateStructures::Pixel &head) {
+void Map::removeBorderInX(const CoordinateStructures::Pixel &head) {
     for (auto it = border.begin(); it != border.end();)
-        (it->x == head.x && it->y == head.y) ? it = border.erase(it) : ++it;
+        (it->y == head.y) ? it = border.erase(it) : ++it;
 
     updateBorder();
 }
 
-bool Map::borderCollision() {
+void Map::removeBorderInY(const CoordinateStructures::Pixel &head) {
+    for (auto it = border.begin(); it != border.end();)
+        (it->x == head.x) ? it = border.erase(it) : ++it;
+
+    updateBorder();
+}
+
+void Map::borderCollision() {
     auto head = snake->getHeadPosition() * pixelPerSquare;
 
     for (const auto &b : border) {
         if (head == b) {
-            removeBorder(head);
-            return true;
+            if (!snake->isOnSteroids()) {
+                onGameOver();
+                return;
+            }
+            if (head.x == 0 || head.x == map.cols - pixelPerSquare) removeBorderInX(head);
+            if (head.y == 0 || head.y == map.rows - pixelPerSquare) removeBorderInY(head);
+            snake->setOnSteroids(false);
+            updateOccupiedSpaces();
+            return;
         }
     }
-
-    return false;
 }
 
-void Map::checkCollisionWithBorder() { //NOLINT
+void Map::checkOutOfBounds() { //NOLINT
     auto head = snake->getHeadPosition() * pixelPerSquare;
 
-    if (borderCollision() && !snake->isOnSteroids()) onGameOver();
-
     if (head.x < 0) {
-        head.x += pixelPerSquare;
-        updateOccupiedSpaces();
         snake->setHeadPosition({(map.cols - pixelPerSquare) / pixelPerSquare, head.y / pixelPerSquare});
         updateSnake();
-        snake->setOnSteroids(false);
     }
     if (head.x > map.cols - pixelPerSquare) {
-        head.x -= pixelPerSquare;
-        updateOccupiedSpaces();
         snake->setHeadPosition({0, head.y / pixelPerSquare});
         updateSnake();
-        snake->setOnSteroids(false);
     }
     if (head.y < 0) {
-        head.y += pixelPerSquare;
-        updateOccupiedSpaces();
         snake->setHeadPosition({head.x / pixelPerSquare, (map.rows - pixelPerSquare) / pixelPerSquare});
         updateSnake();
-        snake->setOnSteroids(false);
     }
     if (head.y > map.rows - pixelPerSquare) {
-        head.y -= pixelPerSquare;
-        updateOccupiedSpaces();
         snake->setHeadPosition({head.x / pixelPerSquare, 0});
         updateSnake();
-        snake->setOnSteroids(false);
     }
-
 }
 
 void Map::spawnConsumableOverTime() {
@@ -303,7 +309,7 @@ void Map::spawnConsumableOverTime() {
         }
     }
 
-    if (consumablesEaten % 1 == 0) {
+    if (consumablesEaten % 15 == 0) {
         auto newConsumable = Food::Consumable{Food::ConsumableType::STEROIDS};
         spawnConsumable(newConsumable);
     }

@@ -38,7 +38,7 @@ private:
     void updateBorder();
     static void fitToGrid(CoordinateStructures::Pixel& pixel) ;
     void onKeyPressed(int key);
-    void checkCollisionWithBorder();
+    void checkOutOfBounds();
     void checkCollisionWithConsumable(CoordinateStructures::Pixel &head);
     void setConsumablePosition(Food::Consumable &consumable);
     void updateOccupiedSpaces();
@@ -47,10 +47,11 @@ private:
     CoordinateStructures::Pixel generatePosition();
     void spawnConsumableOverTime();
     cv::Scalar randomize();
-    void removeBorder(const CoordinateStructures::Pixel &head);
+    void removeBorderInX(const CoordinateStructures::Pixel &head);
+    void removeBorderInY(const CoordinateStructures::Pixel &head);
     void updateGameTick();
     void showPointsOnConsumable(const Food::Consumable& consumable);
-    bool borderCollision();
+    void borderCollision();
     void onSnakeMove();
     void onConsumableCollision(const Food::Consumable& consumable);
     void checkCollisionWithBody();
@@ -70,6 +71,7 @@ private:
     std::mt19937 engine{std::random_device{}()};
     int consumablesEaten = 0;
     int timeToMove = 400;
+    bool paused = false;
     cv::Mat wall = cv::imread("icons/wall.png", cv::IMREAD_UNCHANGED);
 };
 
