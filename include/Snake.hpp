@@ -10,7 +10,7 @@
 class Snake {
 
 public:
-    Snake(CoordinateStructures::Pixel coords, const CoordinateStructures::Steps &steps);
+    explicit Snake(CoordinateStructures::Pixel coords);
 
     bool changeDirection(CoordinateStructures::Direction direction);
 
@@ -35,7 +35,6 @@ public:
 private:
     CoordinateStructures::Pixel headPosition;
     std::deque<CoordinateStructures::Pixel> body;
-    CoordinateStructures::Steps steps;
     CoordinateStructures::Direction direction = CoordinateStructures::Direction::RIGHT;
     mutable std::mt19937 engine{std::random_device{}()};
     bool onSteroids = false;

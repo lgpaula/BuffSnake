@@ -148,19 +148,21 @@ void Game::onHowToPlay() { //NOLINT
                 cv::Point(screenWidth / 2 - 450, screenHeight / 2), cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
     cv::putText(fullscreenDisplay, "Genetics gives you 0 points and slows down the snake",
                 cv::Point(screenWidth / 2 - 450, screenHeight / 2 + 50), cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
+    cv::putText(fullscreenDisplay, "Space to pause",
+                cv::Point(screenWidth / 2 - 450, screenHeight / 2 + 100), cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
     cv::putText(fullscreenDisplay, "Backspace to return",
-                cv::Point(screenWidth / 2 - 450, screenHeight / 2 + 150), cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
-    cv::putText(fullscreenDisplay, "ESC to exit",
                 cv::Point(screenWidth / 2 - 450, screenHeight / 2 + 200), cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
+    cv::putText(fullscreenDisplay, "ESC to exit",
+                cv::Point(screenWidth / 2 - 450, screenHeight / 2 + 250), cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
 
     int key = cv::waitKey(1);
     onKeyPressed(key);
 }
 
 void Game::startGame() {
-    auto size = CoordinateStructures::Size{500, 500};
+    auto size = CoordinateStructures::Size{25, 25};
 
-    snake = std::make_shared<Snake>(CoordinateStructures::Pixel{size.width / 2, size.height / 2}, CoordinateStructures::Steps{size.width / 20, size.height / 20});
+    snake = std::make_shared<Snake>(CoordinateStructures::Pixel{size.width / 2, size.height / 2});
     map = std::make_unique<Map>(snake, size, [this](const Food::Consumable& consumable) {
         addPoints(consumable.points);
     }, [this]() {

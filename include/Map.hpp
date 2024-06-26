@@ -36,14 +36,14 @@ private:
     void updateBackground();
     void createBorder();
     void updateBorder();
-    void fitToGrid(CoordinateStructures::Pixel& pixel) const;
+    static void fitToGrid(CoordinateStructures::Pixel& pixel) ;
     void onKeyPressed(int key);
-    void checkCollisionWithBorder();
+    void checkOutOfBounds();
     void checkCollisionWithConsumable(CoordinateStructures::Pixel &head);
     void setConsumablePosition(Food::Consumable &consumable);
     void updateOccupiedSpaces();
     void updateConsumables();
-    void resizeIcon(Food::Consumable& consumable) const;
+    static void resizeIcon(cv::Mat& icon);
     CoordinateStructures::Pixel generatePosition();
     void spawnConsumableOverTime();
     cv::Scalar randomize();
@@ -51,25 +51,28 @@ private:
     void removeBorderInY(const CoordinateStructures::Pixel &head);
     void updateGameTick();
     void showPointsOnConsumable(const Food::Consumable& consumable);
-    bool borderCollision();
+    void borderCollision();
     void onSnakeMove();
     void onConsumableCollision(const Food::Consumable& consumable);
     void checkCollisionWithBody();
     void spawnConsumable(Food::Consumable& consumable);
+    static void removeAlpha(cv::Mat& roi, const cv::Mat& icon);
 
 private:
     std::shared_ptr<Snake> snake;
     cv::Mat map;
     OnConsumableEaten onConsumableEaten;
     OnGameOver onGameOver;
-    CoordinateStructures::Steps steps{};
-    std::list<std::pair<CoordinateStructures::Pixel, CoordinateStructures::Pixel>> border{};
+    static const int pixelPerSquare = 25;
+    std::list<CoordinateStructures::Pixel> border{};
     std::chrono::time_point<std::chrono::steady_clock> lastUpdate = std::chrono::steady_clock::now();
     std::unordered_set<Food::Consumable> consumables;
     std::unordered_set<CoordinateStructures::Pixel> occupiedSpaces;
     std::mt19937 engine{std::random_device{}()};
     int consumablesEaten = 0;
     int timeToMove = 400;
+    bool paused = false;
+    cv::Mat wall = cv::imread("icons/wall.png", cv::IMREAD_UNCHANGED);
 };
 
 

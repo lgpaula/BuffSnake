@@ -1,6 +1,8 @@
 #ifndef SNAKE_COORDINATESTRUCTURES_HPP
 #define SNAKE_COORDINATESTRUCTURES_HPP
 
+#include <iostream>
+
 namespace CoordinateStructures {
 
     struct Size {
@@ -16,18 +18,27 @@ namespace CoordinateStructures {
         Pixel(int x, int y) : x(x), y(y) {}
         explicit Pixel(Size size) : x(size.width), y(size.height) {}
 
+        friend std::ostream& operator<<(std::ostream& os, const Pixel& pixel) {
+            os << "x: " << pixel.x << " y: " << pixel.y;
+            return os;
+        }
+
         bool operator==(const Pixel& other) const {
             return x == other.x && y == other.y;
+        }
+
+        Pixel operator*(int steps) const {
+            return {x * steps, y * steps};
+        }
+
+        void operator*=(int steps) {
+            x *= steps;
+            y *= steps;
         }
     };
 
     enum Direction {
         UP, DOWN, LEFT, RIGHT
-    };
-
-    struct Steps {
-        int rows;
-        int cols;
     };
 
 }
