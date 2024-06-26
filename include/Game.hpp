@@ -32,6 +32,7 @@ private:
     void handleEnter();
     void moveSelectorUp();
     void moveSelectorDown();
+    void addBackground(const std::string& path);
 
 private:
     int screenHeight;

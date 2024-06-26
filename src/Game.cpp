@@ -38,11 +38,31 @@ void Game::overlayMap() {
     map->getMap().copyTo(fullscreenDisplay(roi));
 }
 
+void removeAlpha(cv::Mat& roi, const cv::Mat& mat) {
+    std::vector<cv::Mat> channels;
+    cv::split(mat, channels);
+    cv::Mat alpha = channels[3];
+    channels.pop_back();
+    cv::Mat bgr;
+    cv::merge(channels, bgr);
+    cv::Mat mask;
+    cv::cvtColor(alpha, mask, cv::COLOR_GRAY2BGR);
+    cv::Mat blended;
+    cv::multiply(bgr, mask, blended, 1.0 / 255);
+    cv::multiply(roi, cv::Scalar::all(255) - mask, roi, 1.0 / 255);
+    cv::add(roi, blended, roi);
+}
+
+void Game::addBackground(const std::string& path) {
+    cv::Mat logo = cv::imread(path, cv::IMREAD_UNCHANGED);
+    cv::Mat roi = fullscreenDisplay(cv::Rect(0, 0, logo.cols, logo.rows));
+    removeAlpha(roi, logo);
+}
+
 void Game::setMainMenuText() {
+    addBackground("icons/mainMenuSnake.png");
     onMainMenu = true;
     onGameOver = false;
-    cv::rectangle(fullscreenDisplay, cv::Point(0, 0), cv::Point(fullscreenDisplay.cols, fullscreenDisplay.rows), backgroundColor, cv::FILLED);
-    cv::putText(fullscreenDisplay, "Snake Game", titlePosition, cv::FONT_HERSHEY_SIMPLEX, 1, black, 2);
     cv::putText(fullscreenDisplay, "Start", mainMenuFirstOption, cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
     cv::putText(fullscreenDisplay, "Instructions", mainMenuSecondOption, cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
     addSelector(mainMenuFirstOption.y);
@@ -144,9 +164,9 @@ void Game::onHowToPlay() { //NOLINT
                 cv::Point(screenWidth / 2 - 450, screenHeight / 2 - 100), cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
     cv::putText(fullscreenDisplay, "Using steroid lets you destroy one border piece or cut through your body",
                 cv::Point(screenWidth / 2 - 450, screenHeight / 2 - 50), cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
-    cv::putText(fullscreenDisplay, "Press 'S' to activate the steroid effect. It lasts 3 seconds and costs 10 points",
+    cv::putText(fullscreenDisplay, "Press 'S' to activate the steroid effect. It lasts 3 seconds and costs 50 points",
                 cv::Point(screenWidth / 2 - 450, screenHeight / 2), cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
-    cv::putText(fullscreenDisplay, "Genetics gives you 0 points and slows down the snake",
+    cv::putText(fullscreenDisplay, "Genetic slows down the snake",
                 cv::Point(screenWidth / 2 - 450, screenHeight / 2 + 50), cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
     cv::putText(fullscreenDisplay, "Space to pause",
                 cv::Point(screenWidth / 2 - 450, screenHeight / 2 + 100), cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
@@ -177,8 +197,7 @@ void Game::addPoints(int points) {
 }
 
 void Game::setGameOverScreen() {
-    cv::rectangle(fullscreenDisplay, cv::Point(0, 0), cv::Point(fullscreenDisplay.cols, fullscreenDisplay.rows), backgroundColor, cv::FILLED);
-    cv::putText(fullscreenDisplay, "Game Over", gameOverPosition, cv::FONT_HERSHEY_SIMPLEX, 1, black, 2);
+    addBackground("icons/gameOverSnake2.png");
     cv::putText(fullscreenDisplay, "Score: " + std::to_string(gamePoints), scorePosition, cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
     cv::putText(fullscreenDisplay, "Play again", playAgainPosition, cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
     cv::putText(fullscreenDisplay, "Return to main menu", returnToMenuPosition, cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
