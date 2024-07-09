@@ -20,6 +20,7 @@ public:
     ~Game() noexcept;
 
 private:
+    void updateScore();
     void onHowToPlay();
     void setMainMenuText();
     void addSelector(int height);
@@ -33,6 +34,7 @@ private:
     void moveSelectorUp();
     void moveSelectorDown();
     void addBackground(const std::string& path);
+    void resetElements();
 
 private:
     int screenHeight;
@@ -41,11 +43,9 @@ private:
     std::thread mainDisplayThread{};
 
     cv::Point selectorPosition = {screenWidth / 2 - 500, screenHeight / 2 - 250};
-    cv::Point titlePosition = {screenWidth / 2 - 450, screenHeight / 2 - 300};
     cv::Point mainMenuFirstOption = {screenWidth / 2 - 450, screenHeight / 2 - 250};
     cv::Point mainMenuSecondOption = {screenWidth / 2 - 450, screenHeight / 2 - 200};
-    cv::Point gameOverPosition = {screenWidth / 2 - 450, screenHeight / 2 - 300};
-    cv::Point scorePosition = {screenWidth / 2 - 450, screenHeight / 2 - 250};
+    cv::Point finalScorePosition = {screenWidth / 2 - 450, screenHeight / 2 - 250};
     cv::Point playAgainPosition = {screenWidth / 2 - 450, screenHeight / 2 - 200};
     cv::Point returnToMenuPosition = {screenWidth / 2 - 450, screenHeight / 2 - 150};
     cv::Point mapPosition = {screenWidth / 2 - 250, screenHeight / 2 - 250};

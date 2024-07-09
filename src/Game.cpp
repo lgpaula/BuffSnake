@@ -13,14 +13,13 @@ Game::Game(int screenHeight, int screenWidth) : screenHeight(screenHeight), scre
             if (gameRunning) {
                 map->updateMap();
                 overlayMap();
+                updateScore();
                 cv::imshow("Game", fullscreenDisplay);
                 continue;
             }
             if (onGameOver && resetElementsFlag) {
                 resetElementsFlag = false;
                 setGameOverScreen();
-                if (map != nullptr) map.reset();
-                if (snake != nullptr) snake.reset();
                 cv::imshow("Game", fullscreenDisplay);
                 continue;
             }
@@ -29,6 +28,11 @@ Game::Game(int screenHeight, int screenWidth) : screenHeight(screenHeight), scre
             onKeyPressed(key);
         }
     });
+}
+
+void Game::updateScore() {
+    cv::Point point = {mapPosition.x + 5, mapPosition.y - 5};
+    cv::putText(fullscreenDisplay, "SCORE: " + std::to_string(gamePoints), point, cv::FONT_HERSHEY_SIMPLEX, 0.75, black, 2);
 }
 
 void Game::overlayMap() {
@@ -180,6 +184,7 @@ void Game::onHowToPlay() { //NOLINT
 }
 
 void Game::startGame() {
+    resetElements();
     auto size = CoordinateStructures::Size{25, 25};
 
     snake = std::make_shared<Snake>(CoordinateStructures::Pixel{size.width / 2, size.height / 2});
@@ -192,13 +197,19 @@ void Game::startGame() {
     gameRunning = true;
 }
 
+void Game::resetElements() {
+    gamePoints = 0;
+    if (map != nullptr) map.reset();
+    if (snake != nullptr) snake.reset();
+}
+
 void Game::addPoints(int points) {
     gamePoints += points;
 }
 
 void Game::setGameOverScreen() {
     addBackground("icons/gameOverSnake2.png");
-    cv::putText(fullscreenDisplay, "Score: " + std::to_string(gamePoints), scorePosition, cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
+    cv::putText(fullscreenDisplay, "Score: " + std::to_string(gamePoints), finalScorePosition, cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
     cv::putText(fullscreenDisplay, "Play again", playAgainPosition, cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
     cv::putText(fullscreenDisplay, "Return to main menu", returnToMenuPosition, cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
     addSelector(playAgainPosition.y);
