@@ -5,7 +5,11 @@
 #include <utility>
 #include "../include/Snake.hpp"
 #include <chrono>
-#include <fstream>
+#include "../consumables/Chicken.hpp"
+#include "../consumables/Protein.hpp"
+#include "../consumables/Creatine.hpp"
+#include "../consumables/Steroids.hpp"
+#include "../consumables/Genetics.hpp"
 
 Map::Map(std::shared_ptr<Snake>& snake, CoordinateStructures::Size dimension,
          Map::OnConsumableEaten consumableEaten, Map::OnGameOver onGameOver) :
@@ -13,12 +17,14 @@ Map::Map(std::shared_ptr<Snake>& snake, CoordinateStructures::Size dimension,
 
     map = cv::Mat::zeros(dimension.height * pixelPerSquare, dimension.width * pixelPerSquare, CV_8UC3);
 
+    wall = resizeIcon(wall);
+
     createBorder();
     updateBackground();
 
     updateMap();
     updateSnake();
-    Food::Consumable consumable = Food::Consumable{Food::ConsumableType::CHICKEN};
+    auto consumable = Consumables::Chicken();
     spawnConsumable(consumable);
 }
 
@@ -93,7 +99,6 @@ void Map::createBorder() {
 void Map::updateBorder() {
     for (const auto &b: border) {
         cv::Point point = cv::Point{b.x, b.y};
-        resizeIcon(wall);
         cv::Mat roi = map(cv::Rect(point.x + 2, point.y + 2, wall.cols, wall.rows));
         removeAlpha(roi, wall);
     }
@@ -168,10 +173,10 @@ void Map::removeAlpha(cv::Mat& roi, const cv::Mat& icon) {
 }
 
 void Map::updateConsumables() {
-    for (const Food::Consumable& c : consumables) {
-        cv::Point point = cv::Point{c.position.x, c.position.y};
-        cv::Mat roi = map(cv::Rect(point.x + 2, point.y + 2, c.icon.cols, c.icon.rows));
-        removeAlpha(roi, c.icon);
+    for (const Consumables::IConsumable& c : consumables) {
+        cv::Point point = cv::Point{c.getPosition().x, c.getPosition().y};
+        cv::Mat roi = map(cv::Rect(point.x + 2, point.y + 2, c.getIcon().cols, c.getIcon().rows));
+        removeAlpha(roi, c.getIcon());
     }
 }
 
@@ -179,7 +184,7 @@ void Map::updateOccupiedSpaces() {
     occupiedSpaces.clear();
     occupiedSpaces.insert(snake->getHeadPosition());
     for (const auto &b : snake->getBody()) occupiedSpaces.insert(b);
-    for (const auto &c : consumables) occupiedSpaces.insert(c.position);
+    for (const auto &c : consumables) occupiedSpaces.insert(c.getPosition());
     for (const auto &b : border) occupiedSpaces.insert(b);
 }
 
@@ -193,15 +198,15 @@ void Map::updateGameTick() {
     clampTick(timeToMove);
 }
 
-void Map::showPointsOnConsumable(const Food::Consumable& consumable) {
-    cv::Point point = cv::Point{consumable.position.x * pixelPerSquare, consumable.position.y * pixelPerSquare};
-    cv::putText(map, "+" + std::to_string(consumable.points), point, cv::FONT_HERSHEY_SIMPLEX, 0.6, cv::Scalar(0, 0, 0), 2);
+void Map::showPointsOnConsumable(const Consumables::IConsumable& consumable) {
+    cv::Point point = cv::Point{consumable.getPosition().x, consumable.getPosition().y};
+    cv::putText(map, "+" + std::to_string(consumable.getPoints()), point, cv::FONT_HERSHEY_SIMPLEX, 0.6, cv::Scalar(0, 0, 0), 2);
 }
 
-void Map::onConsumableCollision(const Food::Consumable& consumable) {
+void Map::onConsumableCollision(const Consumables::IConsumable& consumable) {
     showPointsOnConsumable(consumable);
 
-    if (consumable.type == Food::ConsumableType::GENETICS) {
+    if (consumable.getType() == Consumables::Genetics().getType()) {
         std::uniform_int_distribution<> chance(1, 3);
         if (chance(engine) == 1) {
             timeToMove *= 2;
@@ -210,7 +215,7 @@ void Map::onConsumableCollision(const Food::Consumable& consumable) {
     }
 
     onConsumableEaten(consumable);
-    snake->applyEffect(consumable.effect);
+    snake->applyEffect(consumable.getEffect());
     consumables.erase(consumable);
 
     ++consumablesEaten;
@@ -220,7 +225,7 @@ void Map::onConsumableCollision(const Food::Consumable& consumable) {
 
 void Map::checkCollisionWithConsumable(CoordinateStructures::Pixel &head) {
     for (const auto &c : consumables) {
-        if (head.x == c.position.x && head.y == c.position.y) {
+        if (head.x == c.getPosition().x && head.y == c.getPosition().y) {
             onConsumableCollision(c);
             break;
         }
@@ -294,49 +299,49 @@ void Map::checkOutOfBounds() { //NOLINT
 
 void Map::spawnConsumableOverTime() {
     if (consumablesEaten % 1 == 0) {
-        auto newConsumable = Food::Consumable{Food::ConsumableType::CHICKEN};
+        auto newConsumable = Consumables::Chicken();
         spawnConsumable(newConsumable);
     }
 
     if (consumablesEaten % 8 == 0) {
         std::uniform_int_distribution<> chance(0, 1);
         if (chance(engine)) {
-            auto newConsumable = Food::Consumable{Food::ConsumableType::PROTEIN};
+            auto newConsumable = Consumables::Protein();
             spawnConsumable(newConsumable);
         } else {
-            auto newConsumable = Food::Consumable{Food::ConsumableType::CREATINE};
+            auto newConsumable = Consumables::Creatine();
             spawnConsumable(newConsumable);
         }
     }
 
     if (consumablesEaten % 15 == 0) {
-        auto newConsumable = Food::Consumable{Food::ConsumableType::STEROIDS};
+        auto newConsumable = Consumables::Steroids();
         spawnConsumable(newConsumable);
     }
 
     if (consumablesEaten % 20 == 0) {
-        auto newConsumable = Food::Consumable{Food::ConsumableType::GENETICS};
+        auto newConsumable = Consumables::Genetics();
         spawnConsumable(newConsumable);
     }
 }
 
-void Map::spawnConsumable(Food::Consumable& consumable) {
-    resizeIcon(consumable.icon);
+void Map::spawnConsumable(Consumables::IConsumable& consumable) {
+    consumable.setIcon(resizeIcon(consumable.getIcon()));
     setConsumablePosition(consumable);
 
-    occupiedSpaces.insert(consumable.position);
+    occupiedSpaces.insert(consumable.getPosition());
     consumables.insert(consumable);
     updateConsumables();
 }
 
-void Map::setConsumablePosition(Food::Consumable &consumable) {
+void Map::setConsumablePosition(Consumables::IConsumable& consumable) {
     CoordinateStructures::Pixel pos = generatePosition();
 
     while (std::find(occupiedSpaces.begin(), occupiedSpaces.end(), pos) != occupiedSpaces.end()) {
         pos = generatePosition();
     }
 
-    consumable.position = pos;
+    consumable.setPosition(pos);
 }
 
 void Map::fitToGrid(CoordinateStructures::Pixel &pixel) {
@@ -354,6 +359,8 @@ CoordinateStructures::Pixel Map::generatePosition() {
     return pos;
 }
 
-void Map::resizeIcon(cv::Mat& icon) {
-    cv::resize(icon, icon, cv::Size(pixelPerSquare - 4, pixelPerSquare - 4));
+cv::Mat Map::resizeIcon(const cv::Mat& icon) {
+    cv::Mat resizedIcon;
+    cv::resize(icon, resizedIcon, cv::Size(pixelPerSquare - 4, pixelPerSquare - 4));
+    return resizedIcon;
 }

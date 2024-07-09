@@ -8,7 +8,7 @@
 #include <random>
 #include <opencv2/imgcodecs.hpp>
 #include "CoordinateStructures.hpp"
-#include "IConsumables.hpp"
+#include "../consumables/IConsumable.hpp"
 
 class Snake;
 
@@ -16,7 +16,7 @@ class Map {
 
 public:
 
-    using OnConsumableEaten = std::function<void(Food::Consumable consumable)>;
+    using OnConsumableEaten = std::function<void(Consumables::IConsumable consumable)>;
     using OnGameOver = std::function<void()>;
 
     Map(std::shared_ptr<Snake>& snake, CoordinateStructures::Size dimension,
@@ -40,39 +40,39 @@ private:
     void onKeyPressed(int key);
     void checkOutOfBounds();
     void checkCollisionWithConsumable(CoordinateStructures::Pixel &head);
-    void setConsumablePosition(Food::Consumable &consumable);
+    void setConsumablePosition(Consumables::IConsumable &consumable);
     void updateOccupiedSpaces();
     void updateConsumables();
-    static void resizeIcon(cv::Mat& icon);
+    static cv::Mat resizeIcon(const cv::Mat& icon);
     CoordinateStructures::Pixel generatePosition();
     void spawnConsumableOverTime();
     cv::Scalar randomize();
     void removeBorderInX(const CoordinateStructures::Pixel &head);
     void removeBorderInY(const CoordinateStructures::Pixel &head);
     void updateGameTick();
-    void showPointsOnConsumable(const Food::Consumable& consumable);
+    void showPointsOnConsumable(const Consumables::IConsumable& consumable);
     void borderCollision();
     void onSnakeMove();
-    void onConsumableCollision(const Food::Consumable& consumable);
+    void onConsumableCollision(const Consumables::IConsumable& consumable);
     void checkCollisionWithBody();
-    void spawnConsumable(Food::Consumable& consumable);
+    void spawnConsumable(Consumables::IConsumable& consumable);
     static void removeAlpha(cv::Mat& roi, const cv::Mat& icon);
 
 private:
     std::shared_ptr<Snake> snake;
     cv::Mat map;
+    cv::Mat wall = cv::imread("icons/wall.png", cv::IMREAD_UNCHANGED);
     OnConsumableEaten onConsumableEaten;
     OnGameOver onGameOver;
     static const int pixelPerSquare = 25;
     std::list<CoordinateStructures::Pixel> border{};
     std::chrono::time_point<std::chrono::steady_clock> lastUpdate = std::chrono::steady_clock::now();
-    std::unordered_set<Food::Consumable> consumables;
+    std::unordered_set<Consumables::IConsumable> consumables;
     std::unordered_set<CoordinateStructures::Pixel> occupiedSpaces;
     std::mt19937 engine{std::random_device{}()};
     int consumablesEaten = 0;
     int timeToMove = 400;
     bool paused = false;
-    cv::Mat wall = cv::imread("icons/wall.png", cv::IMREAD_UNCHANGED);
 };
 
 
