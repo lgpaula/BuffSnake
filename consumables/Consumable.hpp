@@ -37,13 +37,13 @@ namespace Consumables {
 
         [[nodiscard]] inline CoordinateStructures::Pixel getPosition() const { return position; }
 
-        void setIcon(const cv::Mat &newIcon) {
-            Consumable::icon = newIcon;
-        }
+        inline void setIcon(const cv::Mat &newIcon) { icon = newIcon; }
 
-        void setPosition(const CoordinateStructures::Pixel &newPosition) {
-            Consumable::position = newPosition;
-        }
+        inline void setPosition(const CoordinateStructures::Pixel &newPosition) { position = newPosition; }
+
+        [[nodiscard]] virtual int getDisplayDuration() { return displayDuration; };
+
+        [[nodiscard]] virtual int getEffectDuration() { return effectDuration; };
 
         bool operator==(const Consumable& other) const {
             return type == other.type;
@@ -54,6 +54,8 @@ namespace Consumables {
         int points{};
         cv::Mat icon{};
         Effect effect{};
+        int displayDuration{};
+        int effectDuration{};
         CoordinateStructures::Pixel position{};
     };
 

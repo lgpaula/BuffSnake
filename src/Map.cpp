@@ -316,15 +316,34 @@ void Map::spawnConsumableOverTime() {
         }
     }
 
-    if (consumablesEaten % 15 == 0) {
+    if (consumablesEaten % 2 == 0) {
         auto newConsumable = Consumables::Steroids();
-        spawnConsumable(newConsumable);
+        spawnConsumableWithDuration(newConsumable);
     }
 
     if (consumablesEaten % 20 == 0) {
         auto newConsumable = Consumables::Genetics();
         spawnConsumable(newConsumable);
     }
+}
+
+void Map::spawnConsumableWithDuration(Consumables::Consumable& consumable) {
+    spawnConsumable(consumable);
+
+    auto timeLeft = consumable.getDisplayDuration();
+    std::thread timer([timeLeft, this, consumable]() mutable {
+
+        while (timeLeft > 0) {
+            timeLeft -= 1000;
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        }
+
+        consumables.erase(consumable);
+        updateConsumables();
+
+    });
+
+    timer.detach();
 }
 
 void Map::spawnConsumable(Consumables::Consumable& consumable) {

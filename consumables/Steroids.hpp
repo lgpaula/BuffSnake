@@ -9,9 +9,8 @@ namespace Consumables {
     public:
         Steroids();
 
-    private:
-        int displayDuration = 5000;
-        int effectDuration = 3000;
+        int getDisplayDuration() override;
+
     };
 
 }

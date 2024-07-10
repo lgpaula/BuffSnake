@@ -56,6 +56,7 @@ private:
     void onConsumableCollision(const Consumables::Consumable& consumable);
     void checkCollisionWithBody();
     void spawnConsumable(Consumables::Consumable& consumable);
+    void spawnConsumableWithDuration(Consumables::Consumable& consumable);
     static void removeAlpha(cv::Mat& roi, const cv::Mat& icon);
 
 private:
