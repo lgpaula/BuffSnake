@@ -1,11 +1,11 @@
 #ifndef SNAKE_CREATINE_HPP
 #define SNAKE_CREATINE_HPP
 
-#include "IConsumable.hpp"
+#include "Consumable.hpp"
 
 namespace Consumables {
 
-    class Creatine : public IConsumable {
+    class Creatine : public Consumable {
     public:
         Creatine();
 

@@ -8,7 +8,7 @@
 #include <random>
 #include <opencv2/imgcodecs.hpp>
 #include "CoordinateStructures.hpp"
-#include "../consumables/IConsumable.hpp"
+#include "../consumables/Consumable.hpp"
 
 class Snake;
 
@@ -16,7 +16,7 @@ class Map {
 
 public:
 
-    using OnConsumableEaten = std::function<void(Consumables::IConsumable consumable)>;
+    using OnConsumableEaten = std::function<void(Consumables::Consumable consumable)>;
     using OnGameOver = std::function<void()>;
 
     Map(std::shared_ptr<Snake>& snake, CoordinateStructures::Size dimension,
@@ -40,7 +40,7 @@ private:
     void onKeyPressed(int key);
     void checkOutOfBounds();
     void checkCollisionWithConsumable(CoordinateStructures::Pixel &head);
-    void setConsumablePosition(Consumables::IConsumable &consumable);
+    void setConsumablePosition(Consumables::Consumable &consumable);
     void updateOccupiedSpaces();
     void updateConsumables();
     static cv::Mat resizeIcon(const cv::Mat& icon);
@@ -50,12 +50,12 @@ private:
     void removeBorderInX(const CoordinateStructures::Pixel &head);
     void removeBorderInY(const CoordinateStructures::Pixel &head);
     void updateGameTick();
-    void showPointsOnConsumable(const Consumables::IConsumable& consumable);
+    void showPointsOnConsumable(const Consumables::Consumable& consumable);
     void borderCollision();
     void onSnakeMove();
-    void onConsumableCollision(const Consumables::IConsumable& consumable);
+    void onConsumableCollision(const Consumables::Consumable& consumable);
     void checkCollisionWithBody();
-    void spawnConsumable(Consumables::IConsumable& consumable);
+    void spawnConsumable(Consumables::Consumable& consumable);
     static void removeAlpha(cv::Mat& roi, const cv::Mat& icon);
 
 private:
@@ -67,7 +67,7 @@ private:
     static const int pixelPerSquare = 25;
     std::list<CoordinateStructures::Pixel> border{};
     std::chrono::time_point<std::chrono::steady_clock> lastUpdate = std::chrono::steady_clock::now();
-    std::unordered_set<Consumables::IConsumable> consumables;
+    std::unordered_set<Consumables::Consumable> consumables;
     std::unordered_set<CoordinateStructures::Pixel> occupiedSpaces;
     std::mt19937 engine{std::random_device{}()};
     int consumablesEaten = 0;

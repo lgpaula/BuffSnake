@@ -1,11 +1,11 @@
 #ifndef SNAKE_CHICKEN_HPP
 #define SNAKE_CHICKEN_HPP
 
-#include "IConsumable.hpp"
+#include "Consumable.hpp"
 
 namespace Consumables {
 
-    class Chicken : public IConsumable {
+    class Chicken : public Consumable {
     public:
         Chicken();
     };

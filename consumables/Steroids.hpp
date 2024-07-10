@@ -1,11 +1,11 @@
 #ifndef SNAKE_STEROIDS_HPP
 #define SNAKE_STEROIDS_HPP
 
-#include "IConsumable.hpp"
+#include "Consumable.hpp"
 
 namespace Consumables {
 
-    class Steroids : public IConsumable {
+    class Steroids : public Consumable {
     public:
         Steroids();
 

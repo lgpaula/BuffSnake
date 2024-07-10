@@ -173,7 +173,7 @@ void Map::removeAlpha(cv::Mat& roi, const cv::Mat& icon) {
 }
 
 void Map::updateConsumables() {
-    for (const Consumables::IConsumable& c : consumables) {
+    for (const Consumables::Consumable& c : consumables) {
         cv::Point point = cv::Point{c.getPosition().x, c.getPosition().y};
         cv::Mat roi = map(cv::Rect(point.x + 2, point.y + 2, c.getIcon().cols, c.getIcon().rows));
         removeAlpha(roi, c.getIcon());
@@ -198,12 +198,14 @@ void Map::updateGameTick() {
     clampTick(timeToMove);
 }
 
-void Map::showPointsOnConsumable(const Consumables::IConsumable& consumable) {
-    cv::Point point = cv::Point{consumable.getPosition().x, consumable.getPosition().y};
-    cv::putText(map, "+" + std::to_string(consumable.getPoints()), point, cv::FONT_HERSHEY_SIMPLEX, 0.6, cv::Scalar(0, 0, 0), 2);
+void Map::showPointsOnConsumable(const Consumables::Consumable &consumable) {
+    if (consumable.getType() == Consumables::ConsumableType::STEROIDS ||
+        consumable.getType() == Consumables::ConsumableType::GENETICS) return;
+    cv::Point position = cv::Point{consumable.getPosition().x, consumable.getPosition().y};
+    cv::putText(map, "+" + std::to_string(consumable.getPoints()), position, cv::FONT_HERSHEY_SIMPLEX, 0.6, cv::Scalar(0, 0, 0), 2);
 }
 
-void Map::onConsumableCollision(const Consumables::IConsumable& consumable) {
+void Map::onConsumableCollision(const Consumables::Consumable& consumable) {
     showPointsOnConsumable(consumable);
 
     if (consumable.getType() == Consumables::Genetics().getType()) {
@@ -325,7 +327,7 @@ void Map::spawnConsumableOverTime() {
     }
 }
 
-void Map::spawnConsumable(Consumables::IConsumable& consumable) {
+void Map::spawnConsumable(Consumables::Consumable& consumable) {
     consumable.setIcon(resizeIcon(consumable.getIcon()));
     setConsumablePosition(consumable);
 
@@ -334,7 +336,7 @@ void Map::spawnConsumable(Consumables::IConsumable& consumable) {
     updateConsumables();
 }
 
-void Map::setConsumablePosition(Consumables::IConsumable& consumable) {
+void Map::setConsumablePosition(Consumables::Consumable& consumable) {
     CoordinateStructures::Pixel pos = generatePosition();
 
     while (std::find(occupiedSpaces.begin(), occupiedSpaces.end(), pos) != occupiedSpaces.end()) {

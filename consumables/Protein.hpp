@@ -1,11 +1,11 @@
 #ifndef SNAKE_PROTEIN_HPP
 #define SNAKE_PROTEIN_HPP
 
-#include "IConsumable.hpp"
+#include "Consumable.hpp"
 
 namespace Consumables {
 
-    class Protein : public IConsumable {
+    class Protein : public Consumable {
     public:
         Protein();
 

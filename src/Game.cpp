@@ -188,7 +188,7 @@ void Game::startGame() {
     auto size = CoordinateStructures::Size{25, 25};
 
     snake = std::make_shared<Snake>(CoordinateStructures::Pixel{size.width / 2, size.height / 2});
-    map = std::make_unique<Map>(snake, size, [this](const Consumables::IConsumable& consumable) {
+    map = std::make_unique<Map>(snake, size, [this](const Consumables::Consumable& consumable) {
         addPoints(consumable.getPoints());
     }, [this]() {
         gameOver();

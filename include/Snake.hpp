@@ -5,7 +5,7 @@
 #include <functional>
 #include <random>
 #include "CoordinateStructures.hpp"
-#include "../consumables/IConsumable.hpp"
+#include "../consumables/Consumable.hpp"
 
 class Snake {
 

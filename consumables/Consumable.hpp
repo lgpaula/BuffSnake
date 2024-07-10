@@ -1,5 +1,5 @@
-#ifndef SNAKE_ICONSUMABLE_HPP
-#define SNAKE_ICONSUMABLE_HPP
+#ifndef SNAKE_CONSUMABLE_HPP
+#define SNAKE_CONSUMABLE_HPP
 
 #include <iostream>
 #include <opencv2/highgui.hpp>
@@ -21,11 +21,11 @@ namespace Consumables {
         TIME_SLOW
     };
 
-    class IConsumable {
+    class Consumable {
     public:
-        IConsumable() = default;
+        Consumable() = default;
 
-        virtual ~IConsumable() = default;
+        virtual ~Consumable() = default;
 
         [[nodiscard]] inline ConsumableType getType() const { return type; }
 
@@ -38,14 +38,14 @@ namespace Consumables {
         [[nodiscard]] inline CoordinateStructures::Pixel getPosition() const { return position; }
 
         void setIcon(const cv::Mat &newIcon) {
-            IConsumable::icon = newIcon;
+            Consumable::icon = newIcon;
         }
 
         void setPosition(const CoordinateStructures::Pixel &newPosition) {
-            IConsumable::position = newPosition;
+            Consumable::position = newPosition;
         }
 
-        bool operator==(const IConsumable& other) const {
+        bool operator==(const Consumable& other) const {
             return type == other.type;
         }
 
@@ -60,8 +60,8 @@ namespace Consumables {
 }
 
 template <>
-struct std::hash<Consumables::IConsumable> {
-    std::size_t operator()(const Consumables::IConsumable& c) const {
+struct std::hash<Consumables::Consumable> {
+    std::size_t operator()(const Consumables::Consumable& c) const {
         using std::hash;
         using std::size_t;
         using std::string;
@@ -72,4 +72,4 @@ struct std::hash<Consumables::IConsumable> {
     }
 };
 
-#endif //SNAKE_ICONSUMABLE_HPP
+#endif //SNAKE_CONSUMABLE_HPP
