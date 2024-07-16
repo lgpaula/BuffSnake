@@ -5,7 +5,7 @@
 #include <functional>
 #include <random>
 #include "CoordinateStructures.hpp"
-#include "IConsumables.hpp"
+#include "../consumables/Consumable.hpp"
 
 class Snake {
 
@@ -18,7 +18,7 @@ public:
 
     void grow();
 
-    void applyEffect(Food::Effect effect);
+    void applyEffect(Consumables::Effect effect);
 
     void setOnSteroids(bool value);
 

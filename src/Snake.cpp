@@ -55,20 +55,20 @@ void Snake::move() {
     body.pop_front();
 }
 
-void Snake::applyEffect(Food::Effect effect) {
+void Snake::applyEffect(Consumables::Effect effect) {
     switch (effect) {
-        case Food::Effect::FULL_GROWTH:
+        case Consumables::Effect::FULL_GROWTH:
             grow();
             break;
-        case Food::Effect::PARTIAL_GROWTH: {
+        case Consumables::Effect::PARTIAL_GROWTH: {
             std::uniform_int_distribution<> chance(1, 4);
             if (chance(engine) != 1) grow();
             break;
         }
-        case Food::Effect::RAMPAGE:
+        case Consumables::Effect::RAMPAGE:
             setOnSteroids(true);
             break;
-        case Food::Effect::TIME_SLOW:
+        case Consumables::Effect::TIME_SLOW:
             break;
     }
 }

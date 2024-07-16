@@ -10,6 +10,11 @@ set(SOURCE_FILES
         src/Map.cpp
         src/Game.cpp
         src/Snake.cpp
+        consumables/Chicken.cpp
+        consumables/Protein.cpp
+        consumables/Creatine.cpp
+        consumables/Steroids.cpp
+        consumables/Genetics.cpp
         main.cpp)
 
 file(COPY icons DESTINATION ${CMAKE_BINARY_DIR})
