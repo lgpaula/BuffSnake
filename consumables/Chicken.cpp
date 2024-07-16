@@ -2,11 +2,21 @@
 
 namespace Consumables {
 
-    Chicken::Chicken() {
+    Chicken::Chicken(cv::Size size) : size(size) {
+        displayDuration = std::make_unique<DurationNo>();
         type = ConsumableType::CHICKEN;
         points = 5;
         icon = cv::imread("icons/chicken.png", cv::IMREAD_UNCHANGED);
+        resizeIcon();
         effect = Effect::FULL_GROWTH;
+    }
+
+    void Chicken::setPosition(CoordinateStructures::Pixel pixel) {
+        position = pixel;
+    }
+
+    void Chicken::resizeIcon() {
+        cv::resize(icon, icon, cv::Size(size.width, size.height));
     }
 
 }

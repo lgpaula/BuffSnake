@@ -3,7 +3,10 @@
 
 #include <iostream>
 #include <opencv2/highgui.hpp>
+#include <opencv2/imgproc.hpp>
+#include <thread>
 #include "../include/CoordinateStructures.hpp"
+#include "Time.hpp"
 
 namespace Consumables {
     enum ConsumableType{
@@ -21,44 +24,26 @@ namespace Consumables {
         TIME_SLOW
     };
 
-    class Consumable {
+    class Consumable : public std::enable_shared_from_this<Consumable> {
     public:
         Consumable() = default;
 
         virtual ~Consumable() = default;
 
-        [[nodiscard]] inline ConsumableType getType() const { return type; }
+        [[nodiscard]] virtual ConsumableType getType() const = 0;
 
-        [[nodiscard]] inline int getPoints() const { return points; }
+        [[nodiscard]] virtual int getPoints() const = 0;
 
-        [[nodiscard]] inline const cv::Mat &getIcon() const { return icon; }
+        [[nodiscard]] virtual const cv::Mat &getIcon() const = 0;
 
-        [[nodiscard]] inline Effect getEffect() const { return effect; }
+        [[nodiscard]] virtual Effect getEffect() const = 0;
 
-        [[nodiscard]] inline CoordinateStructures::Pixel getPosition() const { return position; }
+        [[nodiscard]] virtual CoordinateStructures::Pixel getPosition() const = 0;
 
-        inline void setIcon(const cv::Mat &newIcon) { icon = newIcon; }
+        [[nodiscard]] virtual const std::shared_ptr<ITime>& getDisplayDuration() const = 0;
 
-        inline void setPosition(const CoordinateStructures::Pixel &newPosition) { position = newPosition; }
-
-        [[nodiscard]] virtual int getDisplayDuration() { return displayDuration; };
-
-        [[nodiscard]] virtual int getEffectDuration() { return effectDuration; };
-
-        bool operator==(const Consumable& other) const {
-            return type == other.type;
-        }
-
-    protected:
-        ConsumableType type{};
-        int points{};
-        cv::Mat icon{};
-        Effect effect{};
-        int displayDuration{};
-        int effectDuration{};
-        CoordinateStructures::Pixel position{};
+        virtual void setPosition(CoordinateStructures::Pixel) = 0;
     };
-
 }
 
 template <>
@@ -66,7 +51,6 @@ struct std::hash<Consumables::Consumable> {
     std::size_t operator()(const Consumables::Consumable& c) const {
         using std::hash;
         using std::size_t;
-        using std::string;
 
         size_t res = 17;
         res = res * 31 + hash<int>()(static_cast<int>(c.getType()));
