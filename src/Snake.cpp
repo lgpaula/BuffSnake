@@ -65,10 +65,8 @@ void Snake::applyEffect(Consumables::Effect effect) {
             if (chance(engine) != 1) grow();
             break;
         }
-        case Consumables::Effect::RAMPAGE:
-            setOnSteroids(true);
-            break;
-        case Consumables::Effect::TIME_SLOW:
+        case Consumables::RAMPAGE:
+        case Consumables::TIME_SLOW:
             break;
     }
 }

@@ -18,9 +18,10 @@ public:
 
     using OnConsumableEaten = std::function<void(int points)>;
     using OnGameOver = std::function<void()>;
+    using OnSteroidConsumed = std::function<void(Consumables::SteroidConsumed type)>;
 
     Map(std::shared_ptr<Snake>& snake, CoordinateStructures::Size dimension,
-        OnConsumableEaten onConsumableEaten, OnGameOver onGameOver);
+        OnConsumableEaten onConsumableEaten, OnGameOver onGameOver, OnSteroidConsumed onSteroidConsumed);
 
     void updateSnake();
 
@@ -57,6 +58,8 @@ private:
     void spawnConsumable(const std::shared_ptr<Consumables::Consumable>& consumable);
     static void removeAlpha(cv::Mat& roi, const cv::Mat& icon);
     bool consumableAlreadyExists(Consumables::ConsumableType type);
+    void removeCorners();
+    void startEffectThread(int duration = 5);
 
 private:
     std::shared_ptr<Snake> snake;
@@ -64,6 +67,7 @@ private:
     cv::Mat wall = cv::imread("icons/wall.png", cv::IMREAD_UNCHANGED);
     OnConsumableEaten onConsumableEaten;
     OnGameOver onGameOver;
+    OnSteroidConsumed onSteroidConsumed;
     static const int pixelPerSquare = 25;
     cv::Size iconSize = cv::Size(pixelPerSquare - 4, pixelPerSquare - 4);
     std::list<CoordinateStructures::Pixel> border{};
@@ -74,6 +78,8 @@ private:
     int consumablesEaten = 0;
     int timeToMove = 400;
     bool paused = false;
+    int steroidsStored = 0;
+    std::vector<CoordinateStructures::Pixel> corners = {};
 };
 
 

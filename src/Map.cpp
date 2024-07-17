@@ -11,9 +11,10 @@
 #include "../consumables/Steroids.hpp"
 #include "../consumables/Genetics.hpp"
 
-Map::Map(std::shared_ptr<Snake>& snake, CoordinateStructures::Size dimension,
-         Map::OnConsumableEaten consumableEaten, Map::OnGameOver onGameOver) :
-         snake(std::move(snake)), onConsumableEaten(std::move(consumableEaten)), onGameOver(std::move(onGameOver)) {
+Map::Map(std::shared_ptr<Snake> &snake, CoordinateStructures::Size dimension,
+         Map::OnConsumableEaten consumableEaten, Map::OnGameOver onGameOver, Map::OnSteroidConsumed onSteroidConsumed) :
+        snake(std::move(snake)), onConsumableEaten(std::move(consumableEaten)), onGameOver(std::move(onGameOver)),
+        onSteroidConsumed(std::move(onSteroidConsumed)) {
 
     map = cv::Mat::zeros(dimension.height * pixelPerSquare, dimension.width * pixelPerSquare, CV_8UC3);
 
@@ -51,6 +52,7 @@ void Map::updateTimer() {
 
 void Map::onKeyPressed(int key) {
     CoordinateStructures::Direction input = snake->getDirection();
+    if (key == -1) return;
     switch (key) {
         case 27:
             cv::destroyAllWindows();
@@ -74,6 +76,13 @@ void Map::onKeyPressed(int key) {
         case 32:
             paused = !paused;
             break;
+        case 115:
+            if (snake->isOnSteroids() || !steroidsStored) return;
+            snake->setOnSteroids(true);
+            onSteroidConsumed(Consumables::SteroidConsumed::INJECTED);
+            --steroidsStored;
+            startEffectThread();
+            break;
         default:
             break;
     }
@@ -81,6 +90,20 @@ void Map::onKeyPressed(int key) {
         updateSnake();
         updateTimer();
     }
+}
+
+void Map::startEffectThread(int duration) {
+    std::thread effectThread([this, duration]() {
+        auto now = std::chrono::steady_clock::now();
+
+        while (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - now).count() < duration) {
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
+
+        snake->setOnSteroids(false);
+    });
+
+    effectThread.detach();
 }
 
 void Map::createBorder() {
@@ -92,6 +115,13 @@ void Map::createBorder() {
         border.emplace_back(0, i);
         border.emplace_back(map.cols - pixelPerSquare, i);
     }
+
+    corners = {
+            CoordinateStructures::Pixel{0, 0},
+            CoordinateStructures::Pixel{map.cols - pixelPerSquare, 0},
+            CoordinateStructures::Pixel{0, map.rows - pixelPerSquare},
+            CoordinateStructures::Pixel{map.cols - pixelPerSquare, map.rows - pixelPerSquare}
+    };
 
     updateBorder();
 }
@@ -215,6 +245,10 @@ void Map::onConsumableCollision(const std::shared_ptr<Consumables::Consumable>& 
             clampTick(timeToMove);
         }
     }
+    else if (consumable->getType() == Consumables::ConsumableType::STEROIDS) {
+        steroidsStored = std::clamp(++steroidsStored, 0, 3);
+        onSteroidConsumed(Consumables::SteroidConsumed::STORED);
+    }
 
     onConsumableEaten(consumable->getPoints());
     snake->applyEffect(consumable->getEffect());
@@ -249,13 +283,17 @@ void Map::checkCollisionWithBody() {
 void Map::removeBorderInX(const CoordinateStructures::Pixel &head) {
     for (auto it = border.begin(); it != border.end();)
         (it->y == head.y) ? it = border.erase(it) : ++it;
-
-    updateBorder();
 }
 
 void Map::removeBorderInY(const CoordinateStructures::Pixel &head) {
     for (auto it = border.begin(); it != border.end();)
         (it->x == head.x) ? it = border.erase(it) : ++it;
+}
+
+void Map::removeCorners() {
+    for (auto it = border.begin(); it != border.end();)
+        (std::any_of(corners.begin(), corners.end(), [it](const CoordinateStructures::Pixel &c) { return *it == c; }))
+        ? it = border.erase(it) : ++it;
 
     updateBorder();
 }
@@ -269,8 +307,19 @@ void Map::borderCollision() {
                 onGameOver();
                 return;
             }
+
+            if (std::any_of(corners.begin(), corners.end(),
+                            [head](const CoordinateStructures::Pixel &c) { return head == c; })) {
+                snake->setOnSteroids(false);
+                updateOccupiedSpaces();
+                removeCorners();
+                corners.clear();
+                return;
+            }
+
             if (head.x == 0 || head.x == map.cols - pixelPerSquare) removeBorderInX(head);
             if (head.y == 0 || head.y == map.rows - pixelPerSquare) removeBorderInY(head);
+            updateBorder();
             snake->setOnSteroids(false);
             updateOccupiedSpaces();
             return;
