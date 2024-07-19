@@ -33,7 +33,7 @@ namespace Consumables {
 
     private:
         cv::Size size{};
-        int duration = 3000;
+        int duration = 30000;
         std::shared_ptr<ITime> displayDuration{};
         ConsumableType type{};
         int points{};

@@ -14,6 +14,7 @@ Game::Game(int screenHeight, int screenWidth) : screenHeight(screenHeight), scre
                 map->updateMap();
                 overlayMap();
                 updateScore();
+                updateSteroids();
                 cv::imshow("Game", fullscreenDisplay);
                 continue;
             }
@@ -55,6 +56,16 @@ void removeAlpha(cv::Mat& roi, const cv::Mat& mat) {
     cv::multiply(bgr, mask, blended, 1.0 / 255);
     cv::multiply(roi, cv::Scalar::all(255) - mask, roi, 1.0 / 255);
     cv::add(roi, blended, roi);
+}
+
+void Game::updateSteroids() {
+    cv::Mat steroidIcon = cv::imread("icons/steroids.png", cv::IMREAD_UNCHANGED);
+    cv::resize(steroidIcon, steroidIcon, cv::Size(25, 25));
+
+    for (int i = 0; i < steroidCounter; ++i) {
+        cv::Mat roi = fullscreenDisplay(cv::Rect((steroidPosition.x - i*30), steroidPosition.y, steroidIcon.cols, steroidIcon.rows));
+        removeAlpha(roi, steroidIcon);
+    }
 }
 
 void Game::addBackground(const std::string& path) {
@@ -183,6 +194,21 @@ void Game::onHowToPlay() { //NOLINT
     onKeyPressed(key);
 }
 
+void Game::updateSteroidCount(Consumables::SteroidConsumed type) {
+    switch (type) {
+        case Consumables::SteroidConsumed::STORED:
+            ++steroidCounter;
+            break;
+        case Consumables::SteroidConsumed::INJECTED:
+            --steroidCounter;
+            if (gamePoints >= 50) gamePoints -= 50;
+            else gamePoints = 0;
+            break;
+    }
+
+    steroidCounter = std::clamp(steroidCounter, 0, 3);
+}
+
 void Game::startGame() {
     resetElements();
     auto size = CoordinateStructures::Size{25, 25};
@@ -192,19 +218,23 @@ void Game::startGame() {
         addPoints(points);
     }, [this]() {
         gameOver();
+    }, [this](Consumables::SteroidConsumed type) {
+        updateSteroidCount(type);
     });
-
     gameRunning = true;
 }
 
 void Game::resetElements() {
     gamePoints = 0;
+    steroidCounter = 0;
     if (map != nullptr) map.reset();
     if (snake != nullptr) snake.reset();
 }
 
 void Game::addPoints(int points) {
-    gamePoints += points;
+    if (points > 0) gamePoints += points; //avoids steroids -> stupid, stupid way.
+
+    gamePoints = std::clamp(gamePoints, 0, gamePoints);
 }
 
 void Game::setGameOverScreen() {

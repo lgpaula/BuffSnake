@@ -24,6 +24,11 @@ namespace Consumables {
         TIME_SLOW
     };
 
+    enum SteroidConsumed {
+        STORED,
+        INJECTED
+    };
+
     class Consumable : public std::enable_shared_from_this<Consumable> {
     public:
         Consumable() = default;

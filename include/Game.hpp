@@ -35,6 +35,8 @@ private:
     void moveSelectorDown();
     void addBackground(const std::string& path);
     void resetElements();
+    void updateSteroidCount(Consumables::SteroidConsumed type);
+    void updateSteroids();
 
 private:
     int screenHeight;
@@ -49,6 +51,7 @@ private:
     cv::Point playAgainPosition = {screenWidth / 2 - 450, screenHeight / 2 - 200};
     cv::Point returnToMenuPosition = {screenWidth / 2 - 450, screenHeight / 2 - 150};
     cv::Point mapPosition = {screenWidth / 2 - 250, screenHeight / 2 - 250};
+    cv::Point steroidPosition = {screenWidth / 2 + 350, screenHeight / 2 - 280};
 
     std::shared_ptr<Snake> snake = nullptr;
     std::unique_ptr<Map> map = nullptr;
@@ -58,6 +61,7 @@ private:
     bool onGameOver = false;
     bool gameRunning = false;
     bool resetElementsFlag = true;
+    int steroidCounter = 0;
 
     static constexpr int KEY_BACKSPACE = 8;
     static constexpr int KEY_UP = 82;
