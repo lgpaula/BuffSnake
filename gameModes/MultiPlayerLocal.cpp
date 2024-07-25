@@ -17,7 +17,6 @@ MultiPlayerLocal::MultiPlayerLocal(int amountOfPlayers, Helper::Size dimension, 
     cv::resize(wall, wall, cv::Size(iconSize.width, iconSize.height));
     initialize();
 
-    // todo update instructions with images
     // todo variable number of players?
 }
 

@@ -312,6 +312,7 @@ void Game::startGame() {
             }, [this](Consumables::ConsumableType type, Consumables::PowerUpConsumed power) {
                 updateSteroidCount(power);
             });
+            gameRunning = true;
             break;
         case Mode::MULTI_PLAYER_LOCAL: {
             mapPosition = {screenWidth / 2 - 600, screenHeight / 2 - 450};
@@ -325,6 +326,7 @@ void Game::startGame() {
             }, [this](int snakeId) {
                 return removeLife(snakeId);
             });
+            gameRunning = true;
             break;
         }
         case Mode::MULTI_PLAYER_LAN:
@@ -333,17 +335,13 @@ void Game::startGame() {
             nopeScreen();
             break;
     }
-
-    gameRunning = true;
 }
 
 void Game::nopeScreen() {
-    onMainMenu = false;
-    std::cout << "Nope" << std::endl;
-    cv::rectangle(fullscreenDisplay, cv::Point(0, 0), cv::Point(fullscreenDisplay.cols, fullscreenDisplay.rows), black, cv::FILLED);
-    cv::putText(fullscreenDisplay, "NOPE", cv::Point(screenWidth / 2 - 450, screenHeight / 2), cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
-//    cv::waitKey(10);
-//
+    addBackground("icons/nopeScreen.png");
+    cv::imshow("Game", fullscreenDisplay);
+    cv::waitKey(50);
+    setMainMenuText();
 }
 
 void Game::resetElements() {
