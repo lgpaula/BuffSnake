@@ -1,14 +1,14 @@
-#ifndef SNAKE_PROTEIN_HPP
-#define SNAKE_PROTEIN_HPP
+#ifndef SNAKE_PREWORKOUT_HPP
+#define SNAKE_PREWORKOUT_HPP
 
 #include "Consumable.hpp"
 #include "Time.hpp"
 
 namespace Consumables {
 
-    class Protein : public Consumable {
+    class Preworkout : public Consumable {
     public:
-        explicit Protein(cv::Size size);
+        explicit Preworkout(cv::Size size);
 
         [[nodiscard]] ConsumableType getType() const override { return type; }
 
@@ -18,13 +18,15 @@ namespace Consumables {
 
         [[nodiscard]] Effect getEffect() const override { return effect; }
 
-        [[nodiscard]] CoordinateStructures::Pixel getPosition() const override { return position; }
+        [[nodiscard]] Helper::Pixel getPosition() const override { return position; }
+
+        [[nodiscard]] int getId() const override { return id; }
 
         const std::shared_ptr<ITime>& getDisplayDuration() const override { return displayDuration; }
 
-        void setPosition(CoordinateStructures::Pixel pixel) override;
+        void setPosition(Helper::Pixel pixel) override;
 
-        bool operator==(const Protein& other) const {
+        bool operator==(const Preworkout& other) const {
             return type == other.type;
         }
 
@@ -33,14 +35,15 @@ namespace Consumables {
 
     private:
         cv::Size size{};
-        int duration = 8000;
+        int duration = 10000;
         std::shared_ptr<ITime> displayDuration{};
         ConsumableType type{};
         int points{};
         cv::Mat icon{};
         Effect effect{};
-        CoordinateStructures::Pixel position{};
+        Helper::Pixel position{};
+        int id{};
     };
 }
 
-#endif //SNAKE_PROTEIN_HPP
+#endif //SNAKE_PREWORKOUT_HPP

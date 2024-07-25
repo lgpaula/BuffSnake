@@ -7,14 +7,15 @@ Game::Game(int screenHeight, int screenWidth) : screenHeight(screenHeight), scre
         fullscreenDisplay = cv::Mat(screenHeight, screenWidth, CV_8UC3, backgroundColor);
 
     setMainMenuText();
+    resizeIcons();
 
     mainDisplayThread = std::thread([this]() {
         while (true) {
             if (gameRunning) {
-                map->updateMap();
+                gameMode->updateMap();
                 overlayMap();
                 updateScore();
-                updateSteroids();
+                updateConsumables();
                 cv::imshow("Game", fullscreenDisplay);
                 continue;
             }
@@ -31,16 +32,24 @@ Game::Game(int screenHeight, int screenWidth) : screenHeight(screenHeight), scre
     });
 }
 
+void Game::resizeIcons() {
+    cv::Size iconSize(23, 23);
+    cv::resize(steroidIcon, steroidIcon, iconSize);
+    cv::resize(preworkoutIcon, preworkoutIcon, iconSize);
+    for (auto& icon : dbIcons) cv::resize(icon, icon, iconSize);
+}
+
 void Game::updateScore() {
-    cv::Point point = {mapPosition.x + 5, mapPosition.y - 5};
-    cv::putText(fullscreenDisplay, "SCORE: " + std::to_string(gamePoints), point, cv::FONT_HERSHEY_SIMPLEX, 0.75, black, 2);
+    if (mode == Mode::SINGLE_PLAYER) {
+        cv::Point point = {mapPosition.x + 5, mapPosition.y - 5};
+        cv::putText(fullscreenDisplay, "SCORE: " + std::to_string(gamePoints), point, cv::FONT_HERSHEY_SIMPLEX, 0.75, black, 2);
+    }
 }
 
 void Game::overlayMap() {
     cv::rectangle(fullscreenDisplay, cv::Point(0, 0), cv::Point(fullscreenDisplay.cols, fullscreenDisplay.rows), backgroundColor, cv::FILLED);
-
-    cv::Rect roi(mapPosition, map->getMap().size());
-    map->getMap().copyTo(fullscreenDisplay(roi));
+    cv::Rect roi(mapPosition, gameMode->getMap().size());
+    gameMode->getMap().copyTo(fullscreenDisplay(roi));
 }
 
 void removeAlpha(cv::Mat& roi, const cv::Mat& mat) {
@@ -58,14 +67,81 @@ void removeAlpha(cv::Mat& roi, const cv::Mat& mat) {
     cv::add(roi, blended, roi);
 }
 
-void Game::updateSteroids() {
-    cv::Mat steroidIcon = cv::imread("icons/steroids.png", cv::IMREAD_UNCHANGED);
-    cv::resize(steroidIcon, steroidIcon, cv::Size(25, 25));
+void Game::updateConsumables() {
+    if (mode == Mode::SINGLE_PLAYER) {
+        for (int i = 0; i < steroidCounter; ++i) {
+            cv::Mat roi = fullscreenDisplay(cv::Rect((steroidPosition.x - i*30), steroidPosition.y, steroidIcon.cols, steroidIcon.rows));
+            removeAlpha(roi, steroidIcon);
+        }
+    } else if (mode == Mode::MULTI_PLAYER_LOCAL) {
+        for (size_t i = 0; i < amountOfPlayers; ++i) {
+            for (const auto& position : dbPositions[i]) cv::rectangle(fullscreenDisplay, position, position + cv::Point(25, 25), cv::Scalar(30, 130, 245), 1);
+            for (const auto& position : consumablePositions[i]) cv::rectangle(fullscreenDisplay, position, position + cv::Point(25, 25), Helper::COLORS[i].toScalar(), 1);
+        }
 
-    for (int i = 0; i < steroidCounter; ++i) {
-        cv::Mat roi = fullscreenDisplay(cv::Rect((steroidPosition.x - i*30), steroidPosition.y, steroidIcon.cols, steroidIcon.rows));
-        removeAlpha(roi, steroidIcon);
+        for (size_t set = 0; set < amountOfPlayers; ++set) {
+            for (auto it = dragonBalls[set].begin(); it != dragonBalls[set].end(); ++it) {
+                auto icon = dbIcons[*it-1];
+                cv::Mat roi = fullscreenDisplay(cv::Rect(dbPositions[set][*it-1].x + 2, dbPositions[set][*it-1].y + 2, icon.cols, icon.rows));
+                removeAlpha(roi, icon);
+            }
+        }
+
+        for (size_t vec = 0; vec < amountOfPlayers; ++vec) {
+            for (size_t i = 0; i < powerUps[vec].size(); ++i) {
+                auto icon = powerUps[vec][i] == Consumables::Effect::RAMPAGE ? steroidIcon : preworkoutIcon;
+                cv::Mat roi = fullscreenDisplay(cv::Rect(consumablePositions[vec][i].x + 2, consumablePositions[vec][i].y + 2, icon.cols, icon.rows));
+                removeAlpha(roi, icon);
+            }
+        }
     }
+}
+
+bool Game::updatePowerUps(Consumables::Effect effect, Consumables::PowerUpConsumed power, int snakeId) {
+    if (power == Consumables::PowerUpConsumed::USED) {
+        if (removePowerUp(effect, snakeId)) return true;
+    }
+    else if (power == Consumables::PowerUpConsumed::STORED) {
+        addPowerUp(effect, snakeId);
+    }
+    return false;
+}
+
+void Game::addPowerUp(Consumables::Effect effect, int snakeId) {
+    if (effect != Consumables::Effect::RAMPAGE && effect != Consumables::Effect::SPEED) return;
+    if (powerUps[snakeId].size() >= 4) return;
+    powerUps[snakeId].emplace_back(effect);
+}
+
+bool Game::removePowerUp(Consumables::Effect effect, int snakeId) {
+    if (std::find(powerUps[snakeId].begin(), powerUps[snakeId].end(), effect) == powerUps[snakeId].end()) return false;
+    for (auto it = powerUps[snakeId].begin(); it != powerUps[snakeId].end(); ++it) {
+        if (*it == effect) {
+            powerUps[snakeId].erase(it);
+            return true;
+        }
+    }
+
+    return false;
+}
+
+int Game::addLife(int snakeId, int consumableId) {
+    dragonBalls[snakeId].insert(consumableId);
+    updateConsumables();
+    return static_cast<int>(dragonBalls[snakeId].size());
+}
+
+int Game::removeLife(int snakeId) {
+    if (dragonBalls[snakeId].empty()) return 0;
+
+    auto randomIndex = std::rand() % dragonBalls[snakeId].size(); //NOLINT(cert-msc50-cpp)
+    auto it = dragonBalls[snakeId].begin();
+    std::advance(it, randomIndex);
+    dragonBalls[snakeId].erase(it);
+
+    updateConsumables();
+
+    return static_cast<int>(dragonBalls[snakeId].size());
 }
 
 void Game::addBackground(const std::string& path) {
@@ -78,8 +154,11 @@ void Game::setMainMenuText() {
     addBackground("icons/mainMenuSnake.png");
     onMainMenu = true;
     onGameOver = false;
-    cv::putText(fullscreenDisplay, "Start", mainMenuFirstOption, cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
-    cv::putText(fullscreenDisplay, "Instructions", mainMenuSecondOption, cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
+    cv::putText(fullscreenDisplay, "Singleplayer", mainMenuFirstOption, cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
+    cv::putText(fullscreenDisplay, "Multiplayer Local", mainMenuSecondOption, cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
+    cv::putText(fullscreenDisplay, "Multiplayer LAN", mainMenuThirdOption, cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
+    cv::putText(fullscreenDisplay, "Multiplayer Online", mainMenuFourthOption, cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
+    cv::putText(fullscreenDisplay, "Instructions", mainMenuFifthOption, cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
     addSelector(mainMenuFirstOption.y);
 }
 
@@ -87,7 +166,7 @@ void Game::addSelector(int height) {
     if (!onMainMenu && !onGameOver) return;
     selectorPosition.y = height;
     cv::rectangle(fullscreenDisplay, cv::Point(screenWidth / 2 - 500, screenHeight / 2 - 300),
-                  cv::Point(screenWidth / 2 - 475, screenHeight / 2 - 100), backgroundColor, cv::FILLED);
+                  cv::Point(screenWidth / 2 - 475, screenHeight / 2), backgroundColor, cv::FILLED);
     cv::putText(fullscreenDisplay, ">", selectorPosition, cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
 }
 
@@ -128,8 +207,18 @@ void Game::handleKeyDown() {
 void Game::handleEnter() { //NOLINT
     if (onMainMenu) {
         if (selectorPosition.y == mainMenuFirstOption.y) {
+            mode = Mode::SINGLE_PLAYER;
             startGame();
         } else if (selectorPosition.y == mainMenuSecondOption.y) {
+            mode = Mode::MULTI_PLAYER_LOCAL;
+            startGame();
+        } else if (selectorPosition.y == mainMenuThirdOption.y) {
+            mode = Mode::MULTI_PLAYER_LAN;
+            startGame();
+        } else if (selectorPosition.y == mainMenuFourthOption.y) {
+            mode = Mode::MULTI_PLAYER_ONLINE;
+            startGame();
+        } else if (selectorPosition.y == mainMenuFifthOption.y) {
             onHowToPlay();
         }
     } else if (onGameOver) {
@@ -144,7 +233,7 @@ void Game::handleEnter() { //NOLINT
 void Game::moveSelectorUp() {
     selectorPosition.y -= 50;
     if (onMainMenu) {
-        selectorPosition.y = std::clamp(selectorPosition.y, mainMenuFirstOption.y, mainMenuSecondOption.y);
+        selectorPosition.y = std::clamp(selectorPosition.y, mainMenuFirstOption.y, mainMenuFifthOption.y);
     }
     if (onGameOver) {
         selectorPosition.y = std::clamp(selectorPosition.y, playAgainPosition.y, returnToMenuPosition.y);
@@ -155,7 +244,7 @@ void Game::moveSelectorUp() {
 void Game::moveSelectorDown() {
     selectorPosition.y += 50;
     if (onMainMenu) {
-        selectorPosition.y = std::clamp(selectorPosition.y, mainMenuFirstOption.y, mainMenuSecondOption.y);
+        selectorPosition.y = std::clamp(selectorPosition.y, mainMenuFirstOption.y, mainMenuFifthOption.y);
     }
     if (onGameOver) {
         selectorPosition.y = std::clamp(selectorPosition.y, playAgainPosition.y, returnToMenuPosition.y);
@@ -194,12 +283,12 @@ void Game::onHowToPlay() { //NOLINT
     onKeyPressed(key);
 }
 
-void Game::updateSteroidCount(Consumables::SteroidConsumed type) {
-    switch (type) {
-        case Consumables::SteroidConsumed::STORED:
+void Game::updateSteroidCount(Consumables::PowerUpConsumed power) {
+    switch (power) {
+        case Consumables::PowerUpConsumed::STORED:
             ++steroidCounter;
             break;
-        case Consumables::SteroidConsumed::INJECTED:
+        case Consumables::PowerUpConsumed::USED:
             --steroidCounter;
             if (gamePoints >= 50) gamePoints -= 50;
             else gamePoints = 0;
@@ -211,24 +300,46 @@ void Game::updateSteroidCount(Consumables::SteroidConsumed type) {
 
 void Game::startGame() {
     resetElements();
-    auto size = CoordinateStructures::Size{25, 25};
+    auto size = Helper::Size{25, 25};
 
-    snake = std::make_shared<Snake>(CoordinateStructures::Pixel{size.width / 2, size.height / 2});
-    map = std::make_unique<Map>(snake, size, [this](int points) {
-        addPoints(points);
-    }, [this]() {
-        gameOver();
-    }, [this](Consumables::SteroidConsumed type) {
-        updateSteroidCount(type);
-    });
+    switch (mode) {
+        case Mode::SINGLE_PLAYER:
+            mapPosition = {screenWidth / 2 - 250, screenHeight / 2 - 250};
+            gameMode = std::make_unique<SinglePlayer>(size, [this](int points) {
+                addPoints(points);
+            }, [this]() {
+                gameOver();
+            }, [this](Consumables::ConsumableType type, Consumables::PowerUpConsumed power) {
+                updateSteroidCount(power);
+            });
+            break;
+        case Mode::MULTI_PLAYER_LOCAL: {
+            mapPosition = {screenWidth / 2 - 600, screenHeight / 2 - 450};
+            size = Helper::Size{50, 35};
+            gameMode = std::make_unique<MultiPlayerLocal>(amountOfPlayers, size, [this](int snakeId) {
+                gameOverMultiPlayer(snakeId);
+            }, [this](Consumables::Effect effect, Consumables::PowerUpConsumed power, int snakeId) {
+                return updatePowerUps(effect, power, snakeId);
+            }, [this](int snakeId, int consumableId) {
+                return addLife(snakeId, consumableId);
+            }, [this](int snakeId) {
+                return removeLife(snakeId);
+            });
+            break;
+        }
+        case Mode::MULTI_PLAYER_LAN:
+        case Mode::MULTI_PLAYER_ONLINE:
+        default:
+            break;
+    }
+
     gameRunning = true;
 }
 
 void Game::resetElements() {
     gamePoints = 0;
     steroidCounter = 0;
-    if (map != nullptr) map.reset();
-    if (snake != nullptr) snake.reset();
+    if (gameMode != nullptr) gameMode.reset();
 }
 
 void Game::addPoints(int points) {
@@ -238,8 +349,25 @@ void Game::addPoints(int points) {
 }
 
 void Game::setGameOverScreen() {
+    if (mode == Mode::SINGLE_PLAYER) {
+        setGameOverScreenSinglePlayer();
+    } else if (mode == Mode::MULTI_PLAYER_LOCAL) {
+        setGameOverScreenMultiPlayer();
+    }
+}
+
+void Game::setGameOverScreenSinglePlayer() {
     addBackground("icons/gameOverSnake2.png");
     cv::putText(fullscreenDisplay, "Score: " + std::to_string(gamePoints), finalScorePosition, cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
+    cv::putText(fullscreenDisplay, "Play again", playAgainPosition, cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
+    cv::putText(fullscreenDisplay, "Return to main menu", returnToMenuPosition, cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
+    addSelector(playAgainPosition.y);
+}
+
+void Game::setGameOverScreenMultiPlayer() {
+    cv::rectangle(fullscreenDisplay, cv::Point(0, 0), cv::Point(fullscreenDisplay.cols, fullscreenDisplay.rows), backgroundColor, cv::FILLED);
+    //winner snake strong,
+    //loser snake weak
     cv::putText(fullscreenDisplay, "Play again", playAgainPosition, cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
     cv::putText(fullscreenDisplay, "Return to main menu", returnToMenuPosition, cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
     addSelector(playAgainPosition.y);
@@ -251,6 +379,11 @@ void Game::gameOver() {
     onMainMenu = false;
     gameRunning = false;
     resetElementsFlag = true;
+}
+
+void Game::gameOverMultiPlayer(int snakeId) {
+    winner = snakeId;
+    gameOver();
 }
 
 Game::~Game() noexcept {

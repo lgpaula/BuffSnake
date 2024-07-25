@@ -1,4 +1,4 @@
-#include "../include/Map.hpp"
+#include "SinglePlayer.hpp"
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 #include <iostream>
@@ -6,20 +6,22 @@
 #include "../include/Snake.hpp"
 #include <chrono>
 #include "../consumables/Chicken.hpp"
-#include "../consumables/Protein.hpp"
 #include "../consumables/Creatine.hpp"
 #include "../consumables/Steroids.hpp"
 #include "../consumables/Genetics.hpp"
 
-Map::Map(std::shared_ptr<Snake> &snake, CoordinateStructures::Size dimension,
-         Map::OnConsumableEaten consumableEaten, Map::OnGameOver onGameOver, Map::OnSteroidConsumed onSteroidConsumed) :
-        snake(std::move(snake)), onConsumableEaten(std::move(consumableEaten)), onGameOver(std::move(onGameOver)),
+SinglePlayer::SinglePlayer(Helper::Size dimension, SinglePlayer::OnConsumableEaten consumableEaten,
+                           SinglePlayer::OnGameOverSP onGameOver, SinglePlayer::OnSteroidConsumed onSteroidConsumed) :
+        onConsumableEaten(std::move(consumableEaten)), onGameOver(std::move(onGameOver)),
         onSteroidConsumed(std::move(onSteroidConsumed)) {
 
+    snake = std::make_shared<Snake>(Helper::Pixel{dimension.width / 2, dimension.height / 2});
     map = cv::Mat::zeros(dimension.height * pixelPerSquare, dimension.width * pixelPerSquare, CV_8UC3);
-
     cv::resize(wall, wall, cv::Size(iconSize.width, iconSize.height));
+    initialize();
+}
 
+void SinglePlayer::initialize() {
     createBorder();
     updateBackground();
 
@@ -29,29 +31,25 @@ Map::Map(std::shared_ptr<Snake> &snake, CoordinateStructures::Size dimension,
     spawnConsumable(consumable);
 }
 
-void Map::updateMap() {
+void SinglePlayer::updateMap() {
     int key = cv::waitKey(1);
     onKeyPressed(key);
     if (paused) return;
     auto now = std::chrono::steady_clock::now();
-    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastUpdate).count();
-    if (elapsed >= timeToMove) {
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - snake->getLastUpdate()).count();
+    if (elapsed >= snake->getTimeToMove()) {
         onSnakeMove();
-        lastUpdate = now;
+        snake->setLastUpdate(now);
     }
 }
 
-void Map::onSnakeMove() {
+void SinglePlayer::onSnakeMove() {
     snake->move();
     updateSnake();
 }
 
-void Map::updateTimer() {
-    lastUpdate = std::chrono::steady_clock::now();
-}
-
-void Map::onKeyPressed(int key) {
-    CoordinateStructures::Direction input = snake->getDirection();
+void SinglePlayer::onKeyPressed(int key) {
+    Helper::Direction input = snake->getDirection();
     if (key == -1) return;
     switch (key) {
         case 27:
@@ -59,54 +57,39 @@ void Map::onKeyPressed(int key) {
             exit(0);
         case 82:
             if (paused) return;
-            input = CoordinateStructures::Direction::UP;
+            input = Helper::Direction::UP;
             break;
         case 84:
             if (paused) return;
-            input = CoordinateStructures::Direction::DOWN;
+            input = Helper::Direction::DOWN;
             break;
         case 81:
             if (paused) return;
-            input = CoordinateStructures::Direction::LEFT;
+            input = Helper::Direction::LEFT;
             break;
         case 83:
             if (paused) return;
-            input = CoordinateStructures::Direction::RIGHT;
+            input = Helper::Direction::RIGHT;
             break;
         case 32:
             paused = !paused;
             break;
         case 115:
-            if (snake->isOnSteroids() || !steroidsStored) return;
-            snake->setOnSteroids(true);
-            onSteroidConsumed(Consumables::SteroidConsumed::INJECTED);
+            if (snake->isOnSteroids() || !steroidsStored || paused) return;
+            onSteroidConsumed(Consumables::ConsumableType::STEROIDS, Consumables::PowerUpConsumed::USED);
             --steroidsStored;
-            startEffectThread();
+            snake->applyEffect(Consumables::Effect::RAMPAGE);
             break;
         default:
             break;
     }
     if (snake->changeDirection(input)) {
         updateSnake();
-        updateTimer();
+        snake->setLastUpdate(std::chrono::steady_clock::now());
     }
 }
 
-void Map::startEffectThread(int duration) {
-    std::thread effectThread([this, duration]() {
-        auto now = std::chrono::steady_clock::now();
-
-        while (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - now).count() < duration) {
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-        }
-
-        snake->setOnSteroids(false);
-    });
-
-    effectThread.detach();
-}
-
-void Map::createBorder() {
+void SinglePlayer::createBorder() {
     for (int i = 0; i < map.cols; i += pixelPerSquare) {
         border.emplace_back(i, 0);
         border.emplace_back(i, map.rows - pixelPerSquare);
@@ -117,16 +100,16 @@ void Map::createBorder() {
     }
 
     corners = {
-            CoordinateStructures::Pixel{0, 0},
-            CoordinateStructures::Pixel{map.cols - pixelPerSquare, 0},
-            CoordinateStructures::Pixel{0, map.rows - pixelPerSquare},
-            CoordinateStructures::Pixel{map.cols - pixelPerSquare, map.rows - pixelPerSquare}
+            Helper::Pixel{0, 0},
+            Helper::Pixel{map.cols - pixelPerSquare, 0},
+            Helper::Pixel{0, map.rows - pixelPerSquare},
+            Helper::Pixel{map.cols - pixelPerSquare, map.rows - pixelPerSquare}
     };
 
     updateBorder();
 }
 
-void Map::updateBorder() {
+void SinglePlayer::updateBorder() {
     for (const auto &b: border) {
         cv::Point point = cv::Point{b.x, b.y};
         cv::Mat roi = map(cv::Rect(point.x + 2, point.y + 2, wall.cols, wall.rows));
@@ -134,7 +117,7 @@ void Map::updateBorder() {
     }
 }
 
-void Map::updateBackground() {
+void SinglePlayer::updateBackground() {
     int iCounter = 0;
     int jCounter = 0;
 
@@ -154,7 +137,7 @@ void Map::updateBackground() {
     updateConsumables();
 }
 
-cv::Scalar Map::randomize() {
+cv::Scalar SinglePlayer::randomize() {
     std::uniform_int_distribution<> r(0, 255);
     std::uniform_int_distribution<> g(0, 255);
     std::uniform_int_distribution<> b(0, 255);
@@ -162,7 +145,7 @@ cv::Scalar Map::randomize() {
     return out;
 }
 
-void Map::updateSnake() { //NOLINT
+void SinglePlayer::updateSnake() { //NOLINT
     updateBackground();
 
     auto head = snake->getHeadPosition() * pixelPerSquare;
@@ -183,11 +166,11 @@ void Map::updateSnake() { //NOLINT
     checkCollisionWithBody();
     borderCollision();
     checkOutOfBounds();
-    checkCollisionWithConsumable(head);
+    checkCollisionWithConsumable();
     updateOccupiedSpaces();
 }
 
-void Map::removeAlpha(cv::Mat& roi, const cv::Mat& icon) {
+void SinglePlayer::removeAlpha(cv::Mat& roi, const cv::Mat& icon) {
     std::vector<cv::Mat> channels;
     cv::split(icon, channels);
     cv::Mat alpha = channels[3];
@@ -202,7 +185,7 @@ void Map::removeAlpha(cv::Mat& roi, const cv::Mat& icon) {
     cv::add(roi, blended, roi);
 }
 
-void Map::updateConsumables() {
+void SinglePlayer::updateConsumables() {
     for (const auto& c : consumables) {
         cv::Point point = cv::Point{c->getPosition().x, c->getPosition().y};
         cv::Mat roi = map(cv::Rect(point.x + 2, point.y + 2, c->getIcon().cols, c->getIcon().rows));
@@ -210,7 +193,7 @@ void Map::updateConsumables() {
     }
 }
 
-void Map::updateOccupiedSpaces() {
+void SinglePlayer::updateOccupiedSpaces() {
     occupiedSpaces.clear();
     occupiedSpaces.insert(snake->getHeadPosition() * pixelPerSquare);
     for (const auto &b : snake->getBody()) occupiedSpaces.insert(b * pixelPerSquare);
@@ -218,36 +201,29 @@ void Map::updateOccupiedSpaces() {
     for (const auto &b : border) occupiedSpaces.insert(b);
 }
 
-void clampTick(int &timeToMove) {
-    timeToMove -= 3;
-    timeToMove = std::clamp(timeToMove, 20, 400);
+void SinglePlayer::updateGameTick() {
+    snake->setTimeToMove(snake->getTimeToMove() - 3);
 }
 
-void Map::updateGameTick() {
-    timeToMove -= 3;
-    clampTick(timeToMove);
-}
-
-void Map::showPointsOnConsumable(const std::shared_ptr<Consumables::Consumable>& consumable) {
+void SinglePlayer::showPointsOnConsumable(const std::shared_ptr<Consumables::Consumable>& consumable) {
     if (consumable->getType() == Consumables::ConsumableType::STEROIDS ||
         consumable->getType() == Consumables::ConsumableType::GENETICS) return;
     cv::Point position = cv::Point{consumable->getPosition().x, consumable->getPosition().y};
     cv::putText(map, "+" + std::to_string(consumable->getPoints()), position, cv::FONT_HERSHEY_SIMPLEX, 0.6, cv::Scalar(0, 0, 0), 2);
 }
 
-void Map::onConsumableCollision(const std::shared_ptr<Consumables::Consumable>& consumable) {
+void SinglePlayer::onConsumableCollision(const std::shared_ptr<Consumables::Consumable>& consumable) {
     showPointsOnConsumable(consumable);
 
     if (consumable->getType() == Consumables::ConsumableType::GENETICS) {
         std::uniform_int_distribution<> chance(1, 3);
         if (chance(engine) == 1) {
-            timeToMove *= 2;
-            clampTick(timeToMove);
+            snake->setTimeToMove(snake->getTimeToMove() * 2);
         }
     }
     else if (consumable->getType() == Consumables::ConsumableType::STEROIDS) {
         steroidsStored = std::clamp(++steroidsStored, 0, 3);
-        onSteroidConsumed(Consumables::SteroidConsumed::STORED);
+        onSteroidConsumed(Consumables::ConsumableType::STEROIDS, Consumables::PowerUpConsumed::STORED);
     }
 
     onConsumableEaten(consumable->getPoints());
@@ -259,8 +235,9 @@ void Map::onConsumableCollision(const std::shared_ptr<Consumables::Consumable>& 
     updateGameTick();
 }
 
-void Map::checkCollisionWithConsumable(CoordinateStructures::Pixel &head) {
+void SinglePlayer::checkCollisionWithConsumable() {
     for (const auto &c : consumables) {
+        auto head = snake->getHeadPosition() * pixelPerSquare;
         if (head.x == c->getPosition().x && head.y == c->getPosition().y) {
             onConsumableCollision(c);
             break;
@@ -268,7 +245,7 @@ void Map::checkCollisionWithConsumable(CoordinateStructures::Pixel &head) {
     }
 }
 
-void Map::checkCollisionWithBody() {
+void SinglePlayer::checkCollisionWithBody() {
     auto it = std::find(snake->getBody().begin(), snake->getBody().end(), snake->getHeadPosition());
     if (it != snake->getBody().end()) {
         if (snake->isOnSteroids()) {
@@ -280,25 +257,25 @@ void Map::checkCollisionWithBody() {
     }
 }
 
-void Map::removeBorderInX(const CoordinateStructures::Pixel &head) {
+void SinglePlayer::removeBorderInX(const Helper::Pixel &px) {
     for (auto it = border.begin(); it != border.end();)
-        (it->y == head.y) ? it = border.erase(it) : ++it;
+        (it->y == px.y) ? it = border.erase(it) : ++it;
 }
 
-void Map::removeBorderInY(const CoordinateStructures::Pixel &head) {
+void SinglePlayer::removeBorderInY(const Helper::Pixel &px) {
     for (auto it = border.begin(); it != border.end();)
-        (it->x == head.x) ? it = border.erase(it) : ++it;
+        (it->x == px.x) ? it = border.erase(it) : ++it;
 }
 
-void Map::removeCorners() {
+void SinglePlayer::removeCorners() {
     for (auto it = border.begin(); it != border.end();)
-        (std::any_of(corners.begin(), corners.end(), [it](const CoordinateStructures::Pixel &c) { return *it == c; }))
+        (std::any_of(corners.begin(), corners.end(), [it](const Helper::Pixel &c) { return *it == c; }))
         ? it = border.erase(it) : ++it;
 
     updateBorder();
 }
 
-void Map::borderCollision() {
+void SinglePlayer::borderCollision() {
     auto head = snake->getHeadPosition() * pixelPerSquare;
 
     for (const auto &b : border) {
@@ -309,7 +286,7 @@ void Map::borderCollision() {
             }
 
             if (std::any_of(corners.begin(), corners.end(),
-                            [head](const CoordinateStructures::Pixel &c) { return head == c; })) {
+                            [head](const Helper::Pixel &c) { return head == c; })) {
                 snake->setOnSteroids(false);
                 updateOccupiedSpaces();
                 removeCorners();
@@ -327,7 +304,7 @@ void Map::borderCollision() {
     }
 }
 
-void Map::checkOutOfBounds() { //NOLINT
+void SinglePlayer::checkOutOfBounds() { //NOLINT
     auto head = snake->getHeadPosition() * pixelPerSquare;
 
     if (head.x < 0) {
@@ -348,31 +325,24 @@ void Map::checkOutOfBounds() { //NOLINT
     }
 }
 
-bool Map::consumableAlreadyExists(Consumables::ConsumableType type) {
+bool SinglePlayer::consumableAlreadyExists(Consumables::ConsumableType type) {
     return std::any_of(consumables.begin(), consumables.end(), [type](const std::shared_ptr<Consumables::Consumable>& c) {
         return c->getType() == type;
     });
 }
 
-void Map::spawnConsumableOverTime() {
+void SinglePlayer::spawnConsumableOverTime() {
     if (consumablesEaten % 1 == 0 && !consumableAlreadyExists(Consumables::ConsumableType::CHICKEN)) {
         std::shared_ptr<Consumables::Consumable> newConsumable = std::make_shared<Consumables::Chicken>(iconSize);
         spawnConsumable(newConsumable);
     }
 
-    if (consumablesEaten % 8 == 0 && !consumableAlreadyExists(Consumables::ConsumableType::PROTEIN)
-                                && !consumableAlreadyExists(Consumables::ConsumableType::CREATINE)) {
-        std::uniform_int_distribution<> chance(0, 1);
-        if (chance(engine)) {
-            std::shared_ptr<Consumables::Consumable> newConsumable = std::make_shared<Consumables::Protein>(iconSize);
-            spawnConsumable(newConsumable);
-        } else {
-            std::shared_ptr<Consumables::Consumable> newConsumable = std::make_shared<Consumables::Creatine>(iconSize);
-            spawnConsumable(newConsumable);
-        }
+    if (consumablesEaten % 8 == 0 && !consumableAlreadyExists(Consumables::ConsumableType::CREATINE)) {
+        std::shared_ptr<Consumables::Consumable> newConsumable = std::make_shared<Consumables::Creatine>(iconSize);
+        spawnConsumable(newConsumable);
     }
 
-    if (consumablesEaten % 2 == 0 && !consumableAlreadyExists(Consumables::ConsumableType::STEROIDS)) {
+    if (consumablesEaten % 15 == 0 && !consumableAlreadyExists(Consumables::ConsumableType::STEROIDS)) {
         std::shared_ptr<Consumables::Consumable> newConsumable = std::make_shared<Consumables::Steroids>(iconSize);
         spawnConsumable(newConsumable);
     }
@@ -383,7 +353,7 @@ void Map::spawnConsumableOverTime() {
     }
 }
 
-void Map::spawnConsumable(const std::shared_ptr<Consumables::Consumable>& consumable) {
+void SinglePlayer::spawnConsumable(const std::shared_ptr<Consumables::Consumable>& consumable) {
     setConsumablePosition(*consumable);
 
     occupiedSpaces.insert(consumable->getPosition());
@@ -410,8 +380,8 @@ void Map::spawnConsumable(const std::shared_ptr<Consumables::Consumable>& consum
 
 }
 
-void Map::setConsumablePosition(Consumables::Consumable& consumable) {
-    CoordinateStructures::Pixel pos = generatePosition();
+void SinglePlayer::setConsumablePosition(Consumables::Consumable& consumable) {
+    Helper::Pixel pos = generatePosition();
 
     while (std::find(occupiedSpaces.begin(), occupiedSpaces.end(), pos) != occupiedSpaces.end()) {
         pos = generatePosition();
@@ -420,17 +390,21 @@ void Map::setConsumablePosition(Consumables::Consumable& consumable) {
     consumable.setPosition(pos);
 }
 
-void Map::fitToGrid(CoordinateStructures::Pixel &pixel) {
+void SinglePlayer::fitToGrid(Helper::Pixel &pixel) {
     pixel.x -= (pixel.x % pixelPerSquare);
     pixel.y -= (pixel.y % pixelPerSquare);
 }
 
-CoordinateStructures::Pixel Map::generatePosition() {
+Helper::Pixel SinglePlayer::generatePosition() {
     std::uniform_int_distribution<> x(0, (map.cols - 1));
     std::uniform_int_distribution<> y(0, (map.rows - 1));
 
-    CoordinateStructures::Pixel pos = {x(engine), y(engine)};
+    Helper::Pixel pos = {x(engine), y(engine)};
 
     fitToGrid(pos);
     return pos;
 }
+
+SinglePlayer::~SinglePlayer() {
+    if (snake != nullptr) snake.reset();
+};

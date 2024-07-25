@@ -7,14 +7,16 @@ find_package(OpenCV REQUIRED)
 find_package(X11 REQUIRED)
 
 set(SOURCE_FILES
-        src/Map.cpp
+        gameModes/SinglePlayer.cpp
+        gameModes/MultiPlayerLocal.cpp
         src/Game.cpp
         src/Snake.cpp
         consumables/Chicken.cpp
-        consumables/Protein.cpp
+        consumables/Preworkout.cpp
         consumables/Creatine.cpp
         consumables/Steroids.cpp
         consumables/Genetics.cpp
+        consumables/DragonBalls.cpp
         main.cpp)
 
 file(COPY icons DESTINATION ${CMAKE_BINARY_DIR})
