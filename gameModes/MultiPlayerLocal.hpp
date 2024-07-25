@@ -66,6 +66,7 @@ private:
     cv::Mat wall = cv::imread("icons/wall.png", cv::IMREAD_UNCHANGED);
     OnConsumableEaten onConsumableEaten;
     static const int pixelPerSquare = 25;
+    static const int randomWalls = 30;
     cv::Size iconSize = cv::Size(pixelPerSquare - 4, pixelPerSquare - 4);
     std::list<Helper::Pixel> border{};
     std::unordered_set<std::shared_ptr<Consumables::Consumable>> consumables;

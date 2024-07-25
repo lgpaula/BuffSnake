@@ -213,6 +213,14 @@ void MultiPlayerLocal::createBorder() {
             Helper::Pixel{map.cols - pixelPerSquare, map.rows - pixelPerSquare}
     };
 
+    for (size_t i = 0; i < randomWalls; ++i) {
+        Helper::Pixel pos = generatePosition();
+        while (std::find(occupiedSpaces.begin(), occupiedSpaces.end(), pos) != occupiedSpaces.end()) {
+            pos = generatePosition();
+        }
+        border.emplace_back(pos);
+    }
+
     updateBorder();
 }
 
