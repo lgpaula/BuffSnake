@@ -45,6 +45,7 @@ private:
     bool updatePowerUps(Consumables::Effect effect, Consumables::PowerUpConsumed power, int snakeId);
     void setGameOverScreenSinglePlayer();
     void setGameOverScreenMultiPlayer();
+    void nopeScreen();
 
 private:
     int screenHeight;
@@ -93,10 +94,10 @@ private:
     };
 
     const std::array<std::vector<cv::Point>, 4> consumablePositions = {
-            std::vector<cv::Point>{cv::Point(360, 31), cv::Point(390, 31), cv::Point(420, 31), cv::Point(450, 31)},
-            std::vector<cv::Point>{cv::Point(1643, 90), cv::Point(1643, 120), cv::Point(1643, 150), cv::Point(1643, 180)},
-            std::vector<cv::Point>{cv::Point(301, 939), cv::Point(301, 909), cv::Point(301, 879), cv::Point(301, 849)},
-            std::vector<cv::Point>{cv::Point(1584, 998), cv::Point(1554, 998), cv::Point(1524, 998), cv::Point(1494, 998)}
+            std::vector<cv::Point>{cv::Point(360, 31), cv::Point(390, 31), cv::Point(420, 31), cv::Point(450, 31), cv::Point(480, 31)},
+            std::vector<cv::Point>{cv::Point(1643, 90), cv::Point(1643, 120), cv::Point(1643, 150), cv::Point(1643, 180), cv::Point(1643, 210)},
+            std::vector<cv::Point>{cv::Point(301, 939), cv::Point(301, 909), cv::Point(301, 879), cv::Point(301, 849), cv::Point(301, 819)},
+            std::vector<cv::Point>{cv::Point(1584, 998), cv::Point(1554, 998), cv::Point(1524, 998), cv::Point(1494, 998), cv::Point(1464, 998)}
     };
 
     std::array<std::set<int>, 4> dragonBalls{
@@ -124,6 +125,24 @@ private:
     cv::Mat db7Icon = cv::imread("icons/db7.png", cv::IMREAD_UNCHANGED);
 
     std::array<cv::Mat, 7> dbIcons = {db1Icon, db2Icon, db3Icon, db4Icon, db5Icon, db6Icon, db7Icon};
+
+    cv::Mat bigBlue = cv::imread("icons/big_blue_snake.png", cv::IMREAD_UNCHANGED);
+    cv::Mat bigGreen = cv::imread("icons/big_green_snake.png", cv::IMREAD_UNCHANGED);
+    cv::Mat bigRed = cv::imread("icons/big_red_snake.png", cv::IMREAD_UNCHANGED);
+    cv::Mat bigYellow = cv::imread("icons/big_yellow_snake.png", cv::IMREAD_UNCHANGED);
+    cv::Mat smallBlue = cv::imread("icons/sad_blue_snake.png", cv::IMREAD_UNCHANGED);
+    cv::Mat smallGreen = cv::imread("icons/sad_green_snake.png", cv::IMREAD_UNCHANGED);
+    cv::Mat smallRed = cv::imread("icons/sad_red_snake.png", cv::IMREAD_UNCHANGED);
+    cv::Mat smallYellow = cv::imread("icons/sad_yellow_snake.png", cv::IMREAD_UNCHANGED);
+
+    std::array<cv::Mat, 4> bigSnakes = {bigBlue, bigRed, bigGreen, bigYellow};
+    std::array<cv::Mat, 4> smallSnakes = {smallBlue, smallRed, smallGreen, smallYellow};
+
+    const std::array<std::vector<cv::Point>, 3> snakeDisplayPositions = {
+            std::vector<cv::Point>{cv::Point(887, 25), cv::Point(1030, 540)},
+            std::vector<cv::Point>{cv::Point(887, 25), cv::Point(911, 540), cv::Point(1158, 540)},
+            std::vector<cv::Point>{cv::Point(887, 25), cv::Point(710, 540), cv::Point(1030, 540), cv::Point(1350, 540)}
+    };
 };
 
 

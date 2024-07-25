@@ -109,7 +109,7 @@ bool Game::updatePowerUps(Consumables::Effect effect, Consumables::PowerUpConsum
 
 void Game::addPowerUp(Consumables::Effect effect, int snakeId) {
     if (effect != Consumables::Effect::RAMPAGE && effect != Consumables::Effect::SPEED) return;
-    if (powerUps[snakeId].size() >= 4) return;
+    if (powerUps[snakeId].size() >= 5) return;
     powerUps[snakeId].emplace_back(effect);
 }
 
@@ -330,10 +330,20 @@ void Game::startGame() {
         case Mode::MULTI_PLAYER_LAN:
         case Mode::MULTI_PLAYER_ONLINE:
         default:
+            nopeScreen();
             break;
     }
 
     gameRunning = true;
+}
+
+void Game::nopeScreen() {
+    onMainMenu = false;
+    std::cout << "Nope" << std::endl;
+    cv::rectangle(fullscreenDisplay, cv::Point(0, 0), cv::Point(fullscreenDisplay.cols, fullscreenDisplay.rows), black, cv::FILLED);
+    cv::putText(fullscreenDisplay, "NOPE", cv::Point(screenWidth / 2 - 450, screenHeight / 2), cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
+//    cv::waitKey(10);
+//
 }
 
 void Game::resetElements() {
@@ -366,8 +376,27 @@ void Game::setGameOverScreenSinglePlayer() {
 
 void Game::setGameOverScreenMultiPlayer() {
     cv::rectangle(fullscreenDisplay, cv::Point(0, 0), cv::Point(fullscreenDisplay.cols, fullscreenDisplay.rows), backgroundColor, cv::FILLED);
-    //winner snake strong,
-    //loser snake weak
+
+    auto colorName = getColorName(Helper::COLORS[winner]);
+    auto winnerIcon = cv::imread("icons/big_" + colorName + "_snake.png", cv::IMREAD_UNCHANGED);
+    cv::resize(winnerIcon, winnerIcon, cv::Size(982, 1016));
+
+    std::vector<cv::Mat> loserIcons;
+    for (int i = 0; i < amountOfPlayers; ++i) {
+        if (i == winner) continue;
+        loserIcons.emplace_back(cv::imread("icons/sad_" + getColorName(Helper::COLORS[i]) + "_snake.png", cv::IMREAD_UNCHANGED));
+    }
+
+    auto snakePositions = amountOfPlayers - 2;
+    cv::Mat roi = fullscreenDisplay(cv::Rect(snakeDisplayPositions[snakePositions][0].x,
+                                 snakeDisplayPositions[snakePositions][0].y,winnerIcon.cols, winnerIcon.rows));
+    removeAlpha(roi, winnerIcon);
+    for (int i = 0; i < loserIcons.size(); ++i) {
+        roi = fullscreenDisplay(cv::Rect(snakeDisplayPositions[snakePositions][i+1].x,
+                                 snakeDisplayPositions[snakePositions][i+1].y, loserIcons[i].cols, loserIcons[i].rows));
+        removeAlpha(roi, loserIcons[i]);
+    }
+
     cv::putText(fullscreenDisplay, "Play again", playAgainPosition, cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
     cv::putText(fullscreenDisplay, "Return to main menu", returnToMenuPosition, cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
     addSelector(playAgainPosition.y);

@@ -58,11 +58,25 @@ namespace Helper {
         }
     };
 
+    inline std::string getColorName(const RGB& color) {
+        if (color.b == 255 && color.g == 0 && color.r == 0) {
+            return "blue";
+        } else if (color.b == 0 && color.g == 255 && color.r == 255) {
+            return "yellow";
+        } else if (color.b == 0 && color.g == 0 && color.r == 255) {
+            return "red";
+        } else if (color.b == 0 && color.g == 255 && color.r == 0) {
+            return "green";
+        } else {
+            return "UNKNOWN COLOR";
+        }
+    }
+
     const RGB BLUE = {255, 0, 0};
-    const RGB GREEN = {0, 255, 0};
-    const RGB RED = {0, 0, 255};
     const RGB YELLOW = {0, 255, 255};
-    const RGB COLORS[] = { BLUE, GREEN, RED, YELLOW };
+    const RGB RED = {0, 0, 255};
+    const RGB GREEN = {0, 255, 0};
+    const RGB COLORS[] = { BLUE, YELLOW, RED, GREEN };
 
 }
 
