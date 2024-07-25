@@ -158,7 +158,7 @@ void Game::setMainMenuText() {
     cv::putText(fullscreenDisplay, "Multiplayer Local", mainMenuSecondOption, cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
     cv::putText(fullscreenDisplay, "Multiplayer LAN", mainMenuThirdOption, cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
     cv::putText(fullscreenDisplay, "Multiplayer Online", mainMenuFourthOption, cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
-    cv::putText(fullscreenDisplay, "Instructions", mainMenuFifthOption, cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
+//    cv::putText(fullscreenDisplay, "Instructions", mainMenuFifthOption, cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
     addSelector(mainMenuFirstOption.y);
 }
 
@@ -208,18 +208,16 @@ void Game::handleEnter() { //NOLINT
     if (onMainMenu) {
         if (selectorPosition.y == mainMenuFirstOption.y) {
             mode = Mode::SINGLE_PLAYER;
-            startGame();
+            singlePlayerInstructions();
         } else if (selectorPosition.y == mainMenuSecondOption.y) {
             mode = Mode::MULTI_PLAYER_LOCAL;
-            startGame();
+            multiPlayerInstructions();
         } else if (selectorPosition.y == mainMenuThirdOption.y) {
             mode = Mode::MULTI_PLAYER_LAN;
-            startGame();
+            nopeScreen();
         } else if (selectorPosition.y == mainMenuFourthOption.y) {
             mode = Mode::MULTI_PLAYER_ONLINE;
-            startGame();
-        } else if (selectorPosition.y == mainMenuFifthOption.y) {
-            onHowToPlay();
+            nopeScreen();
         }
     } else if (onGameOver) {
         if (selectorPosition.y == playAgainPosition.y) {
@@ -227,13 +225,15 @@ void Game::handleEnter() { //NOLINT
         } else if (selectorPosition.y == returnToMenuPosition.y) {
             setMainMenuText();
         }
+    } else if (onInstructions) {
+        startGame();
     }
 }
 
 void Game::moveSelectorUp() {
     selectorPosition.y -= 50;
     if (onMainMenu) {
-        selectorPosition.y = std::clamp(selectorPosition.y, mainMenuFirstOption.y, mainMenuFifthOption.y);
+        selectorPosition.y = std::clamp(selectorPosition.y, mainMenuFirstOption.y, mainMenuFourthOption.y);
     }
     if (onGameOver) {
         selectorPosition.y = std::clamp(selectorPosition.y, playAgainPosition.y, returnToMenuPosition.y);
@@ -244,7 +244,7 @@ void Game::moveSelectorUp() {
 void Game::moveSelectorDown() {
     selectorPosition.y += 50;
     if (onMainMenu) {
-        selectorPosition.y = std::clamp(selectorPosition.y, mainMenuFirstOption.y, mainMenuFifthOption.y);
+        selectorPosition.y = std::clamp(selectorPosition.y, mainMenuFirstOption.y, mainMenuFourthOption.y);
     }
     if (onGameOver) {
         selectorPosition.y = std::clamp(selectorPosition.y, playAgainPosition.y, returnToMenuPosition.y);
@@ -252,35 +252,32 @@ void Game::moveSelectorDown() {
     addSelector(selectorPosition.y);
 }
 
-void Game::onHowToPlay() { //NOLINT
+void Game::singlePlayerInstructions() { //NOLINT
     onMainMenu = false;
-    //todo replace with image
-    cv::rectangle(fullscreenDisplay, cv::Point(0, 0), cv::Point(fullscreenDisplay.cols, fullscreenDisplay.rows), backgroundColor, cv::FILLED);
-    cv::putText(fullscreenDisplay, "How to play",
-                cv::Point(screenWidth / 2 - 450, screenHeight / 2 - 300), cv::FONT_HERSHEY_SIMPLEX, 1, black, 2);
-    cv::putText(fullscreenDisplay, "Move the snake with the arrow keys",
-                cv::Point(screenWidth / 2 - 450, screenHeight / 2 - 250), cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
-    cv::putText(fullscreenDisplay, "Eating chicken makes you grow and give you 5 points",
-                cv::Point(screenWidth / 2 - 450, screenHeight / 2 - 200), cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
-    cv::putText(fullscreenDisplay, "Eating protein makes you grow and give you 20 points",
-                cv::Point(screenWidth / 2 - 450, screenHeight / 2 - 150), cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
-    cv::putText(fullscreenDisplay, "Eating creatine gives you 20 points and makes you grow 75% of the times",
-                cv::Point(screenWidth / 2 - 450, screenHeight / 2 - 100), cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
-    cv::putText(fullscreenDisplay, "Using steroid lets you destroy one border piece or cut through your body",
-                cv::Point(screenWidth / 2 - 450, screenHeight / 2 - 50), cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
-    cv::putText(fullscreenDisplay, "Press 'S' to activate the steroid effect. It lasts 3 seconds and costs 50 points",
-                cv::Point(screenWidth / 2 - 450, screenHeight / 2), cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
-    cv::putText(fullscreenDisplay, "Genetic slows down the snake",
-                cv::Point(screenWidth / 2 - 450, screenHeight / 2 + 50), cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
-    cv::putText(fullscreenDisplay, "Space to pause",
-                cv::Point(screenWidth / 2 - 450, screenHeight / 2 + 100), cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
-    cv::putText(fullscreenDisplay, "Backspace to return",
-                cv::Point(screenWidth / 2 - 450, screenHeight / 2 + 200), cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
-    cv::putText(fullscreenDisplay, "ESC to exit",
-                cv::Point(screenWidth / 2 - 450, screenHeight / 2 + 250), cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
+    onInstructions = true;
+    addBackground("icons/spInstructions.png");
+    cv::imshow("Game", fullscreenDisplay);
 
     int key = cv::waitKey(1);
     onKeyPressed(key);
+}
+
+void Game::multiPlayerInstructions() { //NOLINT
+    // todo variable number of players
+//    onMainMenu = false;
+//    onInstructions = true;
+//    addBackground("icons/spInstructions.png");
+//    cv::imshow("Game", fullscreenDisplay);
+//
+//    int key = cv::waitKey(1);
+//    onKeyPressed(key);
+}
+
+void Game::nopeScreen() {
+    addBackground("icons/nopeScreen.png");
+    cv::imshow("Game", fullscreenDisplay);
+    cv::waitKey(50);
+    setMainMenuText();
 }
 
 void Game::updateSteroidCount(Consumables::PowerUpConsumed power) {
@@ -332,16 +329,8 @@ void Game::startGame() {
         case Mode::MULTI_PLAYER_LAN:
         case Mode::MULTI_PLAYER_ONLINE:
         default:
-            nopeScreen();
             break;
     }
-}
-
-void Game::nopeScreen() {
-    addBackground("icons/nopeScreen.png");
-    cv::imshow("Game", fullscreenDisplay);
-    cv::waitKey(50);
-    setMainMenuText();
 }
 
 void Game::resetElements() {

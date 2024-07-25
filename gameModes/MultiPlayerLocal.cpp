@@ -16,8 +16,6 @@ MultiPlayerLocal::MultiPlayerLocal(int amountOfPlayers, Helper::Size dimension, 
     map = cv::Mat::zeros(dimension.height * pixelPerSquare, dimension.width * pixelPerSquare, CV_8UC3);
     cv::resize(wall, wall, cv::Size(iconSize.width, iconSize.height));
     initialize();
-
-    // todo variable number of players?
 }
 
 void MultiPlayerLocal::instantiateStartingPositions(Helper::Size dimension) {

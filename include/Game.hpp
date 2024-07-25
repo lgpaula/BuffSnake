@@ -17,7 +17,8 @@ public:
 
 private:
     void updateScore();
-    void onHowToPlay();
+    void singlePlayerInstructions();
+    void multiPlayerInstructions();
     void setMainMenuText();
     void addSelector(int height);
     void startGame();
@@ -58,7 +59,7 @@ private:
     cv::Point mainMenuSecondOption = {screenWidth / 2 - 450, screenHeight / 2 - 200};
     cv::Point mainMenuThirdOption = {screenWidth / 2 - 450, screenHeight / 2 - 150};
     cv::Point mainMenuFourthOption = {screenWidth / 2 - 450, screenHeight / 2 - 100};
-    cv::Point mainMenuFifthOption = {screenWidth / 2 - 450, screenHeight / 2 - 50};
+//    cv::Point mainMenuFifthOption = {screenWidth / 2 - 450, screenHeight / 2 - 50};
 
     cv::Point finalScorePosition = {screenWidth / 2 - 450, screenHeight / 2 - 250};
     cv::Point playAgainPosition = {screenWidth / 2 - 450, screenHeight / 2 - 200};
@@ -71,6 +72,7 @@ private:
 
     int gamePoints = 0;
     bool onMainMenu = true;
+    bool onInstructions = false;
     bool onGameOver = false;
     bool gameRunning = false;
     bool resetElementsFlag = true;
