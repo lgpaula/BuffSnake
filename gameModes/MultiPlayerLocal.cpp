@@ -134,6 +134,10 @@ void MultiPlayerLocal::updateSnake() { //NOLINT
 }
 
 void MultiPlayerLocal::updateMap() {
+    if (snakes.empty()) {
+        onGameOver(-1);
+        return;
+    }
     if (snakes.size() == 1) {
         onGameOver(snakes.begin()->get()->getId());
         return;
@@ -209,20 +213,25 @@ void MultiPlayerLocal::createBorder() {
             Helper::Pixel{map.cols - pixelPerSquare, map.rows - pixelPerSquare}
     };
 
-    for (size_t i = 0; i < randomWalls; ++i) {
+    for (size_t i = 0; i < amountOfRandomWalls; ++i) {
         Helper::Pixel pos = generatePosition();
         while (std::find(occupiedSpaces.begin(), occupiedSpaces.end(), pos) != occupiedSpaces.end()) {
             pos = generatePosition();
         }
-        border.emplace_back(pos);
+        randomWalls.push_back(pos);
     }
 
     updateBorder();
 }
 
 void MultiPlayerLocal::updateBorder() {
-    for (const auto &b: border) {
+    for (const auto& b: border) {
         cv::Point point = cv::Point{b.x, b.y};
+        cv::Mat roi = map(cv::Rect(point.x + 2, point.y + 2, wall.cols, wall.rows));
+        removeAlpha(roi, wall);
+    }
+    for (const auto& w : randomWalls) {
+        cv::Point point = cv::Point{w.x, w.y};
         cv::Mat roi = map(cv::Rect(point.x + 2, point.y + 2, wall.cols, wall.rows));
         removeAlpha(roi, wall);
     }
@@ -368,19 +377,19 @@ void MultiPlayerLocal::spawnConsumableOverTime() {
     }
 
     //3
-    if (consumablesEaten % 1 == 0 && !consumableAlreadyExists(Consumables::ConsumableType::DRAGONBALLS)) {
+    if (consumablesEaten % 3 == 0 && !consumableAlreadyExists(Consumables::ConsumableType::DRAGONBALLS)) {
         std::shared_ptr<Consumables::Consumable> newConsumable = std::make_shared<Consumables::DragonBalls>(iconSize);
         spawnConsumable(newConsumable);
     }
 
     //5
-    if (consumablesEaten % 1 == 0 && !consumableAlreadyExists(Consumables::ConsumableType::PREWORKOUT)) {
+    if (consumablesEaten % 5 == 0 && !consumableAlreadyExists(Consumables::ConsumableType::PREWORKOUT)) {
         std::shared_ptr<Consumables::Consumable> newConsumable = std::make_shared<Consumables::Preworkout>(iconSize);
         spawnConsumable(newConsumable);
     }
 
     //10
-    if (consumablesEaten % 1 == 0 && !consumableAlreadyExists(Consumables::ConsumableType::STEROIDS)) {
+    if (consumablesEaten % 10 == 0 && !consumableAlreadyExists(Consumables::ConsumableType::STEROIDS)) {
         std::shared_ptr<Consumables::Consumable> newConsumable = std::make_shared<Consumables::Steroids>(iconSize);
         spawnConsumable(newConsumable);
     }
@@ -408,9 +417,7 @@ void MultiPlayerLocal::borderCollision() {
         for (const auto &b : border) {
             if (head == b) {
 
-                if (!snake->isOnSteroids()) {
-                    if (!onLifeDecrease(snake->getId())) deadSnakes.insert(snake->getId());
-                }
+                if (!snake->isOnSteroids()) if (!onLifeDecrease(snake->getId())) deadSnakes.insert(snake->getId());
 
                 if (std::any_of(corners.begin(), corners.end(),
                                 [head](const Helper::Pixel &c) { return head == c; })) {
@@ -422,6 +429,15 @@ void MultiPlayerLocal::borderCollision() {
 
                 if (head.x == 0 || head.x == map.cols - pixelPerSquare) removeBorderInX(head);
                 if (head.y == 0 || head.y == map.rows - pixelPerSquare) removeBorderInY(head);
+                updateBorder();
+                updateOccupiedSpaces();
+                return;
+            }
+        }
+        for (const auto& w : randomWalls) {
+            if (head == w) {
+                if (!snake->isOnSteroids()) if (!onLifeDecrease(snake->getId())) deadSnakes.insert(snake->getId());
+                randomWalls.erase(std::remove(randomWalls.begin(), randomWalls.end(), head), randomWalls.end());
                 updateBorder();
                 updateOccupiedSpaces();
                 return;
@@ -530,8 +546,4 @@ void MultiPlayerLocal::removeCorners() {
     updateBorder();
 }
 
-MultiPlayerLocal::~MultiPlayerLocal() {
-//    for (auto& snake : snakes) {
-//        snakes.erase(snake);
-//    }
-}
+MultiPlayerLocal::~MultiPlayerLocal() = default;

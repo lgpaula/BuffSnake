@@ -66,7 +66,6 @@ private:
     cv::Mat wall = cv::imread("icons/wall.png", cv::IMREAD_UNCHANGED);
     OnConsumableEaten onConsumableEaten;
     static const int pixelPerSquare = 25;
-    static const int randomWalls = 30;
     cv::Size iconSize = cv::Size(pixelPerSquare - 4, pixelPerSquare - 4);
     std::list<Helper::Pixel> border{};
     std::unordered_set<std::shared_ptr<Consumables::Consumable>> consumables;
@@ -75,6 +74,8 @@ private:
     int consumablesEaten = 0;
     bool paused = false;
     std::vector<Helper::Pixel> corners = {};
+    static const int amountOfRandomWalls = 30;
+    std::vector<Helper::Pixel> randomWalls = {};
     std::set<int> deadSnakes;
     std::unordered_map<std::shared_ptr<Snake>, std::unordered_map<int, Helper::Direction>> movementKeyMappings;
     std::unordered_map<std::shared_ptr<Snake>, std::unordered_map<int, Consumables::Effect>> effectKeyMappings;

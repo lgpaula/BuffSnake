@@ -40,6 +40,7 @@ private:
     void gameOver();
     void addPoints(int points);
     void onKeyPressed(int key);
+    void onPlayerSelection(int key);
     void resizeIcons();
     void addPowerUp(Consumables::Effect effect, int snakeId);
     bool removePowerUp(Consumables::Effect effect, int snakeId);
@@ -77,7 +78,7 @@ private:
     bool gameRunning = false;
     bool resetElementsFlag = true;
     int steroidCounter = 0;
-    int amountOfPlayers = 2;
+    int amountOfPlayers{};
     int winner{};
 
     static constexpr int KEY_BACKSPACE = 8;
@@ -140,10 +141,11 @@ private:
     std::array<cv::Mat, 4> bigSnakes = {bigBlue, bigRed, bigGreen, bigYellow};
     std::array<cv::Mat, 4> smallSnakes = {smallBlue, smallRed, smallGreen, smallYellow};
 
-    const std::array<std::vector<cv::Point>, 3> snakeDisplayPositions = {
+    const std::array<std::vector<cv::Point>, 4> snakeDisplayPositions = {
             std::vector<cv::Point>{cv::Point(887, 25), cv::Point(1030, 540)},
             std::vector<cv::Point>{cv::Point(887, 25), cv::Point(911, 540), cv::Point(1158, 540)},
-            std::vector<cv::Point>{cv::Point(887, 25), cv::Point(710, 540), cv::Point(1030, 540), cv::Point(1350, 540)}
+            std::vector<cv::Point>{cv::Point(887, 25), cv::Point(710, 540), cv::Point(1030, 540), cv::Point(1350, 540)},
+            std::vector<cv::Point>{cv::Point(550, 540), cv::Point(870, 540), cv::Point(1190, 540), cv::Point(1510, 540)}
     };
 };
 
