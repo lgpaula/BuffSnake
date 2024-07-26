@@ -369,6 +369,9 @@ void Game::startGame() {
 void Game::resetElements() {
     gamePoints = 0;
     steroidCounter = 0;
+    dragonBalls = {std::set<int>{4}, std::set<int>{4}, std::set<int>{4}, std::set<int>{4}};
+    powerUps = {std::vector<Consumables::Effect>{}, std::vector<Consumables::Effect>{},
+            std::vector<Consumables::Effect>{}, std::vector<Consumables::Effect>{}};
     if (gameMode != nullptr) gameMode.reset();
 }
 
@@ -405,8 +408,8 @@ void Game::setGameOverScreenMultiPlayer() {
     if (winner == -1) {
         for (int i = 0; i < loserIcons.size(); ++i) {
             auto snakePositions = amountOfPlayers - 1;
-            cv::Mat roi = fullscreenDisplay(cv::Rect(snakeDisplayPositions[snakePositions][i+1].x,
-                                             snakeDisplayPositions[snakePositions][i+1].y, loserIcons[i].cols, loserIcons[i].rows));
+            cv::Mat roi = fullscreenDisplay(cv::Rect(snakeDisplayPositions[snakePositions][i].x,
+                                             snakeDisplayPositions[snakePositions][i].y, loserIcons[i].cols, loserIcons[i].rows));
             removeAlpha(roi, loserIcons[i]);
         }
     } else {

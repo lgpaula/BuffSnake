@@ -144,8 +144,8 @@ private:
     const std::array<std::vector<cv::Point>, 4> snakeDisplayPositions = {
             std::vector<cv::Point>{cv::Point(887, 25), cv::Point(1030, 540)},
             std::vector<cv::Point>{cv::Point(887, 25), cv::Point(911, 540), cv::Point(1158, 540)},
-            std::vector<cv::Point>{cv::Point(887, 25), cv::Point(710, 540), cv::Point(1030, 540), cv::Point(1350, 540)},
-            std::vector<cv::Point>{cv::Point(550, 540), cv::Point(870, 540), cv::Point(1190, 540), cv::Point(1510, 540)}
+            std::vector<cv::Point>{cv::Point(877, 25), cv::Point(700, 540), cv::Point(1020, 540), cv::Point(1340, 540)},
+            std::vector<cv::Point>{cv::Point(380, 540), cv::Point(700, 540), cv::Point(1020, 540), cv::Point(1340, 540)}
     };
 };
 

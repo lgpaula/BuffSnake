@@ -32,6 +32,7 @@ void MultiPlayerLocal::createSnakes() {
         auto color = Helper::COLORS[i];
         auto newSnake = std::make_shared<Snake>(startingPositions[i], color, static_cast<Helper::Direction>(i), i);
         snakes.insert(newSnake);
+        updateOccupiedSpaces();
     }
 
     generateKeyMappings();
@@ -213,6 +214,7 @@ void MultiPlayerLocal::createBorder() {
             Helper::Pixel{map.cols - pixelPerSquare, map.rows - pixelPerSquare}
     };
 
+    updateOccupiedSpaces();
     for (size_t i = 0; i < amountOfRandomWalls; ++i) {
         Helper::Pixel pos = generatePosition();
         while (std::find(occupiedSpaces.begin(), occupiedSpaces.end(), pos) != occupiedSpaces.end()) {
@@ -221,6 +223,7 @@ void MultiPlayerLocal::createBorder() {
         randomWalls.push_back(pos);
     }
 
+    updateOccupiedSpaces();
     updateBorder();
 }
 
@@ -378,19 +381,19 @@ void MultiPlayerLocal::spawnConsumableOverTime() {
     }
 
     //3
-    if (consumablesEaten % 3 == 0 && !consumableAlreadyExists(Consumables::ConsumableType::DRAGONBALLS)) {
+    if (consumablesEaten % 1 == 0 && !consumableAlreadyExists(Consumables::ConsumableType::DRAGONBALLS)) {
         std::shared_ptr<Consumables::Consumable> newConsumable = std::make_shared<Consumables::DragonBalls>(iconSize);
         spawnConsumable(newConsumable);
     }
 
     //5
-    if (consumablesEaten % 5 == 0 && !consumableAlreadyExists(Consumables::ConsumableType::PREWORKOUT)) {
+    if (consumablesEaten % 1 == 0 && !consumableAlreadyExists(Consumables::ConsumableType::PREWORKOUT)) {
         std::shared_ptr<Consumables::Consumable> newConsumable = std::make_shared<Consumables::Preworkout>(iconSize);
         spawnConsumable(newConsumable);
     }
 
     //10
-    if (consumablesEaten % 10 == 0 && !consumableAlreadyExists(Consumables::ConsumableType::STEROIDS)) {
+    if (consumablesEaten % 1 == 0 && !consumableAlreadyExists(Consumables::ConsumableType::STEROIDS)) {
         std::shared_ptr<Consumables::Consumable> newConsumable = std::make_shared<Consumables::Steroids>(iconSize);
         spawnConsumable(newConsumable);
     }
