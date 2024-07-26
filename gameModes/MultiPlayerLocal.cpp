@@ -380,20 +380,17 @@ void MultiPlayerLocal::spawnConsumableOverTime() {
         spawnConsumable(newConsumable);
     }
 
-    //3
-    if (consumablesEaten % 1 == 0 && !consumableAlreadyExists(Consumables::ConsumableType::DRAGONBALLS)) {
+    if (consumablesEaten % 2 == 0 && !consumableAlreadyExists(Consumables::ConsumableType::DRAGONBALLS)) {
         std::shared_ptr<Consumables::Consumable> newConsumable = std::make_shared<Consumables::DragonBalls>(iconSize);
         spawnConsumable(newConsumable);
     }
 
-    //5
-    if (consumablesEaten % 1 == 0 && !consumableAlreadyExists(Consumables::ConsumableType::PREWORKOUT)) {
+    if (consumablesEaten % 2 == 0 && !consumableAlreadyExists(Consumables::ConsumableType::PREWORKOUT)) {
         std::shared_ptr<Consumables::Consumable> newConsumable = std::make_shared<Consumables::Preworkout>(iconSize);
         spawnConsumable(newConsumable);
     }
 
-    //10
-    if (consumablesEaten % 1 == 0 && !consumableAlreadyExists(Consumables::ConsumableType::STEROIDS)) {
+    if (consumablesEaten % 2 == 0 && !consumableAlreadyExists(Consumables::ConsumableType::STEROIDS)) {
         std::shared_ptr<Consumables::Consumable> newConsumable = std::make_shared<Consumables::Steroids>(iconSize);
         spawnConsumable(newConsumable);
     }
