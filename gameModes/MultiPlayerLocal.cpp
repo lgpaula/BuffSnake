@@ -350,6 +350,7 @@ void MultiPlayerLocal::updateOccupiedSpaces() {
     }
     for (const auto &c : consumables) occupiedSpaces.insert(c->getPosition());
     for (const auto &b : border) occupiedSpaces.insert(b);
+    for (const auto &w : randomWalls) occupiedSpaces.insert(w);
 }
 
 void MultiPlayerLocal::updateConsumables() {
