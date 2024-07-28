@@ -38,8 +38,6 @@ private:
     Helper::Pixel generatePosition() override;
     void spawnConsumableOverTime() override;
     cv::Scalar randomize();
-    void removeBorderInX(const Helper::Pixel &px) override;
-    void removeBorderInY(const Helper::Pixel &px) override;
     void updateGameTick() override;
     void showPointsOnConsumable(const std::shared_ptr<Consumables::Consumable>& consumable);
     void borderCollision() override;
@@ -49,7 +47,6 @@ private:
     void spawnConsumable(const std::shared_ptr<Consumables::Consumable>& consumable) override;
     void removeAlpha(cv::Mat& roi, const cv::Mat& icon) override;
     bool consumableAlreadyExists(Consumables::ConsumableType type) override;
-    void removeCorners() override;
 
 private:
     std::shared_ptr<Snake> snake;
@@ -67,7 +64,6 @@ private:
     int consumablesEaten = 0;
     bool paused = false;
     int steroidsStored = 0;
-    std::vector<Helper::Pixel> corners = {};
 };
 
 

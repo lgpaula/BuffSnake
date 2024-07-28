@@ -202,17 +202,10 @@ void MultiPlayerLocal::createBorder() {
         border.emplace_back(i, 0);
         border.emplace_back(i, map.rows - pixelPerSquare);
     }
-    for (int i = 0; i < map.rows; i += pixelPerSquare) {
+    for (int i = pixelPerSquare; i < map.rows - pixelPerSquare; i += pixelPerSquare) {
         border.emplace_back(0, i);
         border.emplace_back(map.cols - pixelPerSquare, i);
     }
-
-    corners = {
-            Helper::Pixel{0, 0},
-            Helper::Pixel{map.cols - pixelPerSquare, 0},
-            Helper::Pixel{0, map.rows - pixelPerSquare},
-            Helper::Pixel{map.cols - pixelPerSquare, map.rows - pixelPerSquare}
-    };
 
     updateOccupiedSpaces();
     for (size_t i = 0; i < amountOfRandomWalls; ++i) {
@@ -220,7 +213,7 @@ void MultiPlayerLocal::createBorder() {
         while (std::find(occupiedSpaces.begin(), occupiedSpaces.end(), pos) != occupiedSpaces.end()) {
             pos = generatePosition();
         }
-        randomWalls.push_back(pos);
+        border.push_back(pos);
     }
 
     updateOccupiedSpaces();
@@ -230,11 +223,6 @@ void MultiPlayerLocal::createBorder() {
 void MultiPlayerLocal::updateBorder() {
     for (const auto& b: border) {
         cv::Point point = cv::Point{b.x, b.y};
-        cv::Mat roi = map(cv::Rect(point.x + 2, point.y + 2, wall.cols, wall.rows));
-        removeAlpha(roi, wall);
-    }
-    for (const auto& w : randomWalls) {
-        cv::Point point = cv::Point{w.x, w.y};
         cv::Mat roi = map(cv::Rect(point.x + 2, point.y + 2, wall.cols, wall.rows));
         removeAlpha(roi, wall);
     }
@@ -353,7 +341,6 @@ void MultiPlayerLocal::updateOccupiedSpaces() {
     }
     for (const auto &c : consumables) occupiedSpaces.insert(c->getPosition());
     for (const auto &b : border) occupiedSpaces.insert(b);
-    for (const auto &w : randomWalls) occupiedSpaces.insert(w);
 }
 
 void MultiPlayerLocal::updateConsumables() {
@@ -380,30 +367,20 @@ void MultiPlayerLocal::spawnConsumableOverTime() {
         spawnConsumable(newConsumable);
     }
 
-    if (consumablesEaten % 2 == 0 && !consumableAlreadyExists(Consumables::ConsumableType::DRAGONBALLS)) {
+    if (consumablesEaten % 1 == 0 && !consumableAlreadyExists(Consumables::ConsumableType::DRAGONBALLS)) {
         std::shared_ptr<Consumables::Consumable> newConsumable = std::make_shared<Consumables::DragonBalls>(iconSize);
         spawnConsumable(newConsumable);
     }
 
-    if (consumablesEaten % 2 == 0 && !consumableAlreadyExists(Consumables::ConsumableType::PREWORKOUT)) {
+    if (consumablesEaten % 1 == 0 && !consumableAlreadyExists(Consumables::ConsumableType::PREWORKOUT)) {
         std::shared_ptr<Consumables::Consumable> newConsumable = std::make_shared<Consumables::Preworkout>(iconSize);
         spawnConsumable(newConsumable);
     }
 
-    if (consumablesEaten % 2 == 0 && !consumableAlreadyExists(Consumables::ConsumableType::STEROIDS)) {
+    if (consumablesEaten % 1 == 0 && !consumableAlreadyExists(Consumables::ConsumableType::STEROIDS)) {
         std::shared_ptr<Consumables::Consumable> newConsumable = std::make_shared<Consumables::Steroids>(iconSize);
         spawnConsumable(newConsumable);
     }
-}
-
-void MultiPlayerLocal::removeBorderInX(const Helper::Pixel &px) {
-    for (auto it = border.begin(); it != border.end();)
-        (it->y == px.y) ? it = border.erase(it) : ++it;
-}
-
-void MultiPlayerLocal::removeBorderInY(const Helper::Pixel &px) {
-    for (auto it = border.begin(); it != border.end();)
-        (it->x == px.x) ? it = border.erase(it) : ++it;
 }
 
 void MultiPlayerLocal::updateGameTick() {
@@ -415,34 +392,15 @@ void MultiPlayerLocal::updateGameTick() {
 void MultiPlayerLocal::borderCollision() {
     for (auto& snake : snakes) {
         auto head = snake->getHeadPosition() * pixelPerSquare;
-        for (const auto &b : border) {
-            if (head == b) {
-
+        for (auto it = border.begin(); it != border.end();) {
+            if (head == *it) {
                 if (!snake->isOnSteroids()) if (!onLifeDecrease(snake->getId())) deadSnakes.insert(snake->getId());
 
-                if (std::any_of(corners.begin(), corners.end(),
-                                [head](const Helper::Pixel &c) { return head == c; })) {
-                    updateOccupiedSpaces();
-                    removeCorners();
-                    corners.clear();
-                    return;
-                }
-
-                if (head.x == 0 || head.x == map.cols - pixelPerSquare) removeBorderInX(head);
-                if (head.y == 0 || head.y == map.rows - pixelPerSquare) removeBorderInY(head);
+                border.erase(it);
                 updateBorder();
                 updateOccupiedSpaces();
                 return;
-            }
-        }
-        for (const auto& w : randomWalls) {
-            if (head == w) {
-                if (!snake->isOnSteroids()) if (!onLifeDecrease(snake->getId())) deadSnakes.insert(snake->getId());
-                randomWalls.erase(std::remove(randomWalls.begin(), randomWalls.end(), head), randomWalls.end());
-                updateBorder();
-                updateOccupiedSpaces();
-                return;
-            }
+            } else { ++it; }
         }
     }
 }
@@ -537,14 +495,6 @@ bool MultiPlayerLocal::consumableAlreadyExists(Consumables::ConsumableType type)
     }
 
     return false;
-}
-
-void MultiPlayerLocal::removeCorners() {
-    for (auto it = border.begin(); it != border.end();)
-        (std::any_of(corners.begin(), corners.end(), [it](const Helper::Pixel &c) { return *it == c; }))
-        ? it = border.erase(it) : ++it;
-
-    updateBorder();
 }
 
 MultiPlayerLocal::~MultiPlayerLocal() = default;

@@ -94,17 +94,10 @@ void SinglePlayer::createBorder() {
         border.emplace_back(i, 0);
         border.emplace_back(i, map.rows - pixelPerSquare);
     }
-    for (int i = 0; i < map.rows; i += pixelPerSquare) {
+    for (int i = pixelPerSquare; i < map.rows - pixelPerSquare; i += pixelPerSquare) {
         border.emplace_back(0, i);
         border.emplace_back(map.cols - pixelPerSquare, i);
     }
-
-    corners = {
-            Helper::Pixel{0, 0},
-            Helper::Pixel{map.cols - pixelPerSquare, 0},
-            Helper::Pixel{0, map.rows - pixelPerSquare},
-            Helper::Pixel{map.cols - pixelPerSquare, map.rows - pixelPerSquare}
-    };
 
     updateBorder();
 }
@@ -224,6 +217,11 @@ void SinglePlayer::onConsumableCollision(const std::shared_ptr<Consumables::Cons
     else if (consumable->getType() == Consumables::ConsumableType::STEROIDS) {
         steroidsStored = std::clamp(++steroidsStored, 0, 3);
         onSteroidConsumed(Consumables::ConsumableType::STEROIDS, Consumables::PowerUpConsumed::STORED);
+        consumables.erase(consumable);
+        ++consumablesEaten;
+        spawnConsumableOverTime();
+        updateGameTick();
+        return;
     }
 
     onConsumableEaten(consumable->getPoints());
@@ -257,50 +255,22 @@ void SinglePlayer::checkCollisionWithBody() {
     }
 }
 
-void SinglePlayer::removeBorderInX(const Helper::Pixel &px) {
-    for (auto it = border.begin(); it != border.end();)
-        (it->y == px.y) ? it = border.erase(it) : ++it;
-}
-
-void SinglePlayer::removeBorderInY(const Helper::Pixel &px) {
-    for (auto it = border.begin(); it != border.end();)
-        (it->x == px.x) ? it = border.erase(it) : ++it;
-}
-
-void SinglePlayer::removeCorners() {
-    for (auto it = border.begin(); it != border.end();)
-        (std::any_of(corners.begin(), corners.end(), [it](const Helper::Pixel &c) { return *it == c; }))
-        ? it = border.erase(it) : ++it;
-
-    updateBorder();
-}
-
 void SinglePlayer::borderCollision() {
     auto head = snake->getHeadPosition() * pixelPerSquare;
 
-    for (const auto &b : border) {
-        if (head == b) {
+    for (auto it = border.begin(); it != border.end();) {
+        if (head == *it) {
             if (!snake->isOnSteroids()) {
                 onGameOver();
                 return;
             }
 
-            if (std::any_of(corners.begin(), corners.end(),
-                            [head](const Helper::Pixel &c) { return head == c; })) {
-                snake->setOnSteroids(false);
-                updateOccupiedSpaces();
-                removeCorners();
-                corners.clear();
-                return;
-            }
+            border.erase(it);
 
-            if (head.x == 0 || head.x == map.cols - pixelPerSquare) removeBorderInX(head);
-            if (head.y == 0 || head.y == map.rows - pixelPerSquare) removeBorderInY(head);
             updateBorder();
-            snake->setOnSteroids(false);
             updateOccupiedSpaces();
             return;
-        }
+        } else { ++it; }
     }
 }
 
@@ -342,7 +312,7 @@ void SinglePlayer::spawnConsumableOverTime() {
         spawnConsumable(newConsumable);
     }
 
-    if (consumablesEaten % 15 == 0 && !consumableAlreadyExists(Consumables::ConsumableType::STEROIDS)) {
+    if (consumablesEaten % 1 == 0 && !consumableAlreadyExists(Consumables::ConsumableType::STEROIDS)) {
         std::shared_ptr<Consumables::Consumable> newConsumable = std::make_shared<Consumables::Steroids>(iconSize);
         spawnConsumable(newConsumable);
     }
@@ -407,4 +377,4 @@ Helper::Pixel SinglePlayer::generatePosition() {
 
 SinglePlayer::~SinglePlayer() {
     if (snake != nullptr) snake.reset();
-};
+}

@@ -38,8 +38,6 @@ private:
     void updateConsumables() override;
     Helper::Pixel generatePosition() override;
     void spawnConsumableOverTime() override;
-    void removeBorderInX(const Helper::Pixel &px) override;
-    void removeBorderInY(const Helper::Pixel &px) override;
     void updateGameTick() override;
     void borderCollision() override;
     void onSnakeMove(const std::shared_ptr<Snake>& snake);
@@ -48,7 +46,6 @@ private:
     void spawnConsumable(const std::shared_ptr<Consumables::Consumable> &consumable) override;
     void removeAlpha(cv::Mat &roi, const cv::Mat &icon) override;
     bool consumableAlreadyExists(Consumables::ConsumableType type) override;
-    void removeCorners() override;
     void generateKeyMappings();
     void checkCollisionWithOtherSnake();
     cv::Scalar randomize();
@@ -73,9 +70,7 @@ private:
     std::mt19937 engine{std::random_device{}()};
     int consumablesEaten = 0;
     bool paused = false;
-    std::vector<Helper::Pixel> corners = {};
     static const int amountOfRandomWalls = 30;
-    std::vector<Helper::Pixel> randomWalls = {};
     std::set<int> deadSnakes;
     std::unordered_map<std::shared_ptr<Snake>, std::unordered_map<int, Helper::Direction>> movementKeyMappings;
     std::unordered_map<std::shared_ptr<Snake>, std::unordered_map<int, Consumables::Effect>> effectKeyMappings;

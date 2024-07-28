@@ -102,11 +102,10 @@ void Snake::applyEffect(Consumables::Effect effect) {
 }
 
 void Snake::startEffectThread(Consumables::Effect effect) {
-    int duration = effect == Consumables::Effect::RAMPAGE ? 6 : 5;
-    std::thread effectThread([this, duration, effect]() {
+    std::thread effectThread([this, effect]() {
         auto now = std::chrono::steady_clock::now();
 
-        while (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - now).count() < duration) {
+        while (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - now).count() < 5) {
             std::this_thread::sleep_for(std::chrono::seconds(1));
         }
 

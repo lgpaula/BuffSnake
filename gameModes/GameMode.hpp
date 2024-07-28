@@ -47,15 +47,15 @@ private:
     virtual void updateConsumables() = 0;
     [[nodiscard]] virtual Helper::Pixel generatePosition() = 0;
     virtual void spawnConsumableOverTime() = 0;
-    virtual void removeBorderInX(const Helper::Pixel &px) = 0;
-    virtual void removeBorderInY(const Helper::Pixel &px) = 0;
+//    virtual void removeBorderInX(const Helper::Pixel &px) = 0;
+//    virtual void removeBorderInY(const Helper::Pixel &px) = 0;
     virtual void updateGameTick() = 0;
     virtual void borderCollision() = 0;
     virtual void checkCollisionWithBody() = 0;
     virtual void spawnConsumable(const std::shared_ptr<Consumables::Consumable>& consumable) = 0;
     virtual void removeAlpha(cv::Mat& roi, const cv::Mat& icon) = 0;
     [[nodiscard]] virtual bool consumableAlreadyExists(Consumables::ConsumableType type) = 0;
-    virtual void removeCorners() = 0;
+//    virtual void removeCorners() = 0;
 };
 
 
