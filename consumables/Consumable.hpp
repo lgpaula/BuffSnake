@@ -5,28 +5,31 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 #include <thread>
-#include "../include/CoordinateStructures.hpp"
+#include "../include/Helper.hpp"
 #include "Time.hpp"
 
 namespace Consumables {
     enum ConsumableType{
         CHICKEN,
-        PROTEIN,
+        PREWORKOUT,
         CREATINE,
         STEROIDS,
-        GENETICS
+        GENETICS,
+        DRAGONBALLS
     };
 
     enum Effect {
         FULL_GROWTH,
         PARTIAL_GROWTH,
+        SPEED,
         RAMPAGE,
-        TIME_SLOW
+        TIME_SLOW,
+        NONE
     };
 
-    enum SteroidConsumed {
+    enum PowerUpConsumed {
         STORED,
-        INJECTED
+        USED
     };
 
     class Consumable : public std::enable_shared_from_this<Consumable> {
@@ -43,11 +46,13 @@ namespace Consumables {
 
         [[nodiscard]] virtual Effect getEffect() const = 0;
 
-        [[nodiscard]] virtual CoordinateStructures::Pixel getPosition() const = 0;
+        [[nodiscard]] virtual Helper::Pixel getPosition() const = 0;
+
+        [[nodiscard]] virtual int getId() const = 0;
 
         [[nodiscard]] virtual const std::shared_ptr<ITime>& getDisplayDuration() const = 0;
 
-        virtual void setPosition(CoordinateStructures::Pixel) = 0;
+        virtual void setPosition(Helper::Pixel) = 0;
     };
 }
 

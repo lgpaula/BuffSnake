@@ -8,3 +8,4 @@
 - <a href="https://www.flaticon.com/free-icons/steroids" title="steroids icons">Steroids icons created by Freepik - Flaticon</a>
   <a href="https://www.flaticon.com/free-icons/chicken-leg" title="chicken leg icons">Chicken leg icons created by Freepik - Flaticon</a>
 - <a href="https://www.flaticon.com/free-icons/powder" title="powder icons">Powder icons created by Smashicons - Flaticon</a>
+- <a href="https://www.flaticon.com/free-icons/energy-drink" title="energy-drink icons">Energy-drink icons created by Eucalyp - Flaticon</a>

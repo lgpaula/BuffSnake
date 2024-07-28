@@ -9,9 +9,10 @@ namespace Consumables {
         icon = cv::imread("icons/genetics.png", cv::IMREAD_UNCHANGED);
         resizeIcon();
         effect = Effect::TIME_SLOW;
+        id = 0;
     }
 
-    void Genetics::setPosition(CoordinateStructures::Pixel pixel) {
+    void Genetics::setPosition(Helper::Pixel pixel) {
         position = pixel;
     }
 

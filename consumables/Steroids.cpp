@@ -10,9 +10,10 @@ namespace Consumables {
         resizeIcon();
         effect = Effect::RAMPAGE;
         displayDuration->setDuration(duration);
+        id = 0;
     }
 
-    void Steroids::setPosition(CoordinateStructures::Pixel pixel) {
+    void Steroids::setPosition(Helper::Pixel pixel) {
         position = pixel;
     }
 

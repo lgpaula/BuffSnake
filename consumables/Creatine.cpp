@@ -12,7 +12,7 @@ namespace Consumables {
         displayDuration->setDuration(duration);
     }
 
-    void Creatine::setPosition(CoordinateStructures::Pixel pixel) {
+    void Creatine::setPosition(Helper::Pixel pixel) {
         position = pixel;
     }
 

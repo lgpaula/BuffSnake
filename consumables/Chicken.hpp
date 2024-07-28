@@ -18,11 +18,13 @@ namespace Consumables {
 
         [[nodiscard]] Effect getEffect() const override { return effect; }
 
-        [[nodiscard]] CoordinateStructures::Pixel getPosition() const override { return position; }
+        [[nodiscard]] Helper::Pixel getPosition() const override { return position; }
+
+        [[nodiscard]] int getId() const override { return id; }
 
         const std::shared_ptr<ITime>& getDisplayDuration() const override { return displayDuration; }
 
-        void setPosition(CoordinateStructures::Pixel pixel) override;
+        void setPosition(Helper::Pixel pixel) override;
 
         bool operator==(const Chicken& other) const {
             return type == other.type;
@@ -38,7 +40,8 @@ namespace Consumables {
         int points{};
         cv::Mat icon{};
         Effect effect{};
-        CoordinateStructures::Pixel position{};
+        Helper::Pixel position{};
+        int id{};
     };
 
 }

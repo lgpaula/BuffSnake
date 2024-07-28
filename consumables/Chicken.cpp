@@ -9,9 +9,10 @@ namespace Consumables {
         icon = cv::imread("icons/chicken.png", cv::IMREAD_UNCHANGED);
         resizeIcon();
         effect = Effect::FULL_GROWTH;
+        id = 0;
     }
 
-    void Chicken::setPosition(CoordinateStructures::Pixel pixel) {
+    void Chicken::setPosition(Helper::Pixel pixel) {
         position = pixel;
     }
 
