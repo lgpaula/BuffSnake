@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <opencv2/core.hpp>
+#include <boost/asio/io_context.hpp>
 
 namespace Helper {
 

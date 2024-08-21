@@ -1,4 +1,5 @@
 #include "../include/Game.hpp"
+#include "../gameModes/MultiPlayerLAN.hpp"
 #include <iostream>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
@@ -144,6 +145,27 @@ int Game::removeLife(int snakeId) {
     return static_cast<int>(dragonBalls[snakeId].size());
 }
 
+void Game::updateSteroidCount(Consumables::PowerUpConsumed power) {
+    switch (power) {
+        case Consumables::PowerUpConsumed::STORED:
+            ++steroidCounter;
+            break;
+        case Consumables::PowerUpConsumed::USED:
+            --steroidCounter;
+            if (gamePoints >= 50) gamePoints -= 50;
+            else gamePoints = 0;
+            break;
+    }
+
+    steroidCounter = std::clamp(steroidCounter, 0, 3);
+}
+
+void Game::addPoints(int points) {
+    if (points > 0) gamePoints += points; //avoids steroids -> stupid, stupid way.
+
+    gamePoints = std::clamp(gamePoints, 0, gamePoints);
+}
+
 void Game::addBackground(const std::string& path) {
     cv::Mat logo = cv::imread(path, cv::IMREAD_UNCHANGED);
     cv::Mat roi = fullscreenDisplay(cv::Rect(0, 0, logo.cols, logo.rows));
@@ -211,10 +233,10 @@ void Game::handleEnter() { //NOLINT
             singlePlayerInstructions();
         } else if (selectorPosition.y == mainMenuSecondOption.y) {
             mode = Mode::MULTI_PLAYER_LOCAL;
-            multiPlayerInstructions();
+            multiPlayerLocalInstructions();
         } else if (selectorPosition.y == mainMenuThirdOption.y) {
             mode = Mode::MULTI_PLAYER_LAN;
-            nopeScreen();
+            multiPlayerLanInstructions();
         } else if (selectorPosition.y == mainMenuFourthOption.y) {
             mode = Mode::MULTI_PLAYER_ONLINE;
             nopeScreen();
@@ -226,6 +248,15 @@ void Game::handleEnter() { //NOLINT
             setMainMenuText();
         }
     } else if (onInstructions) {
+        startGame();
+    } else if (onLanMenu) {
+        if (selectorPosition.y == mainMenuFirstOption.y) {
+            createServer();
+            joinServer();
+        } else if (selectorPosition.y == mainMenuSecondOption.y) {
+            joinServer();
+        }
+    } else if (onLanRoom) {
         startGame();
     }
 }
@@ -287,7 +318,7 @@ void Game::singlePlayerInstructions() { //NOLINT
     onKeyPressed(key);
 }
 
-void Game::multiPlayerInstructions() { //NOLINT
+void Game::multiPlayerLocalInstructions() { //NOLINT
     onMainMenu = false;
     onInstructions = true;
 
@@ -306,6 +337,19 @@ void Game::multiPlayerInstructions() { //NOLINT
     }
 }
 
+void Game::multiPlayerLanInstructions() {
+    onMainMenu = false;
+    onLanMenu = true;
+
+    cv::rectangle(fullscreenDisplay, cv::Point(0, 0), cv::Point(fullscreenDisplay.cols, fullscreenDisplay.rows), backgroundColor, cv::FILLED);
+    cv::putText(fullscreenDisplay, "Create room", cv::Point(screenWidth / 2 - 200, screenHeight / 2 - 50), cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
+    cv::putText(fullscreenDisplay, "Join room", cv::Point(screenWidth / 2 - 200, screenHeight / 2), cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
+    addSelector(screenHeight / 2 - 50);
+
+    cv::imshow("Game", fullscreenDisplay);
+    cv::waitKey(0);
+}
+
 void Game::nopeScreen() {
     addBackground("icons/nopeScreen.png");
     cv::imshow("Game", fullscreenDisplay);
@@ -313,19 +357,48 @@ void Game::nopeScreen() {
     setMainMenuText();
 }
 
-void Game::updateSteroidCount(Consumables::PowerUpConsumed power) {
-    switch (power) {
-        case Consumables::PowerUpConsumed::STORED:
-            ++steroidCounter;
-            break;
-        case Consumables::PowerUpConsumed::USED:
-            --steroidCounter;
-            if (gamePoints >= 50) gamePoints -= 50;
-            else gamePoints = 0;
-            break;
+void Game::createServer() {
+    try {
+        boost::asio::io_context io_context;
+        server = std::make_unique<LanServer>(io_context, PORT);
+        server_thread = std::thread([&io_context]() {
+            io_context.run();  // Run the server in a separate thread
+        });
+        std::cout << "Server created and running." << std::endl;
+    } catch (std::exception& e) {
+        std::cerr << "Exception while creating server: " << e.what() << std::endl;
+    }
+}
+
+void Game::joinServer() {
+    try {
+        client = std::make_unique<LanClient>(host, PORT);
+        client_thread = std::thread([this]() {
+            client->run();  // Run the client in a separate thread
+        });
+        std::cout << "Client connected to server." << std::endl;
+    } catch (std::exception& e) {
+        std::cerr << "Exception while joining server: " << e.what() << std::endl;
+    }
+    setupLanRoom();
+}
+
+void Game::setupLanRoom() {
+    onLanMenu = false;
+    onLanRoom = true;
+    cv::rectangle(fullscreenDisplay, cv::Point(0, 0), cv::Point(fullscreenDisplay.cols, fullscreenDisplay.rows), backgroundColor, cv::FILLED);
+    std::vector<cv::Mat> players;
+    for (int i = 0; i < server->getClientCount(); ++i) {
+        players.emplace_back(cv::imread("icons/big_" + getColorName(Helper::COLORS[i]) + "_snake.png", cv::IMREAD_UNCHANGED));
+    }
+    for (int i = 0; i < players.size(); ++i) {
+        auto snakePositions = amountOfPlayers - 1;
+        cv::Mat roi = fullscreenDisplay(cv::Rect(snakeDisplayPositions[snakePositions][i].x,
+                                                 snakeDisplayPositions[snakePositions][i].y, players[i].cols, players[i].rows));
+        removeAlpha(roi, players[i]);
     }
 
-    steroidCounter = std::clamp(steroidCounter, 0, 3);
+    cv::putText(fullscreenDisplay, "Start game", playAgainPosition, cv::FONT_HERSHEY_SIMPLEX, 1, white, 2);
 }
 
 void Game::startGame() {
@@ -359,7 +432,21 @@ void Game::startGame() {
             gameRunning = true;
             break;
         }
-        case Mode::MULTI_PLAYER_LAN:
+        case Mode::MULTI_PLAYER_LAN: {
+            mapPosition = {screenWidth / 2 - 600, screenHeight / 2 - 450};
+            size = Helper::Size{50, 35};
+            gameMode = std::make_unique<MultiPlayerLAN>(server->getClientCount(), size, [this](int snakeId) {
+                gameOverMultiPlayer(snakeId);
+            }, [this](Consumables::Effect effect, Consumables::PowerUpConsumed power, int snakeId) {
+                return updatePowerUps(effect, power, snakeId);
+            }, [this](int snakeId, int consumableId) {
+                return addLife(snakeId, consumableId);
+            }, [this](int snakeId) {
+                return removeLife(snakeId);
+            });
+            gameRunning = true;
+            break;
+        }
         case Mode::MULTI_PLAYER_ONLINE:
         default:
             break;
@@ -373,12 +460,6 @@ void Game::resetElements() {
     powerUps = {std::vector<Consumables::Effect>{}, std::vector<Consumables::Effect>{},
             std::vector<Consumables::Effect>{}, std::vector<Consumables::Effect>{}};
     if (gameMode != nullptr) gameMode.reset();
-}
-
-void Game::addPoints(int points) {
-    if (points > 0) gamePoints += points; //avoids steroids -> stupid, stupid way.
-
-    gamePoints = std::clamp(gamePoints, 0, gamePoints);
 }
 
 void Game::setGameOverScreen() {

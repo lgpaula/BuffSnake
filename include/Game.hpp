@@ -1,13 +1,15 @@
 #ifndef SNAKE_GAME_HPP
 #define SNAKE_GAME_HPP
 
-#include <opencv2/core.hpp>
+#include <set>
 #include <thread>
+#include <boost/asio.hpp>
+#include <opencv2/core.hpp>
+#include "Helper.hpp"
 #include "../gameModes/SinglePlayer.hpp"
 #include "../gameModes/MultiPlayerLocal.hpp"
-#include "Helper.hpp"
 #include "../consumables/DragonBalls.hpp"
-#include <set>
+#include "LanServerClient.hpp"
 
 class Game {
 public:
@@ -18,7 +20,7 @@ public:
 private:
     void updateScore();
     void singlePlayerInstructions();
-    void multiPlayerInstructions();
+    void multiPlayerLocalInstructions();
     void setMainMenuText();
     void addSelector(int height);
     void startGame();
@@ -48,6 +50,10 @@ private:
     void setGameOverScreenSinglePlayer();
     void setGameOverScreenMultiPlayer();
     void nopeScreen();
+    void multiPlayerLanInstructions();
+    void createServer();
+    void joinServer();
+    void setupLanRoom();
 
 private:
     int screenHeight;
@@ -75,6 +81,8 @@ private:
     bool onMainMenu = true;
     bool onInstructions = false;
     bool onGameOver = false;
+    bool onLanMenu = false;
+    bool onLanRoom = false;;;
     bool gameRunning = false;
     bool resetElementsFlag = true;
     int steroidCounter = 0;
@@ -147,6 +155,10 @@ private:
             std::vector<cv::Point>{cv::Point(877, 25), cv::Point(700, 540), cv::Point(1020, 540), cv::Point(1340, 540)},
             std::vector<cv::Point>{cv::Point(380, 540), cv::Point(700, 540), cv::Point(1020, 540), cv::Point(1340, 540)}
     };
+
+    std::string host = "127.0.0.1";
+    const int PORT = 12345;
+    std::unique_ptr<LanServer> server;
 };
 
 
