@@ -1,4 +1,11 @@
-# BuffSnake
+## BuffSnake
+
+Simple snake game with a fitness focus.
+
+# Requirements
+  - OpenCV
+  - X11
+  - Boost
 
 # Icons attribution
 - Icons made by [Freepik](https://www.flaticon.com/authors/freepik) from [www.flaticon.com](https://www.flaticon.com/)
