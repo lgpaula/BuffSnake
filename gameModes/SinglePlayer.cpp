@@ -312,7 +312,7 @@ void SinglePlayer::spawnConsumableOverTime() {
         spawnConsumable(newConsumable);
     }
 
-    if (consumablesEaten % 1 == 0 && !consumableAlreadyExists(Consumables::ConsumableType::STEROIDS)) {
+    if (consumablesEaten % 10 == 0 && !consumableAlreadyExists(Consumables::ConsumableType::STEROIDS)) {
         std::shared_ptr<Consumables::Consumable> newConsumable = std::make_shared<Consumables::Steroids>(iconSize);
         spawnConsumable(newConsumable);
     }
