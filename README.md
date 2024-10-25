@@ -1,6 +1,27 @@
 # BuffSnake
+Simple snake game with a fitness focus. Can be played by a single player or multiplayer on the same machine.
 
-# Icons attribution
+## Disclaimer
+This game has only been tested on Fedora OS, so the installation instructions provided are specific to Fedora.
+
+## Requirements
+  - OpenCV
+  ```bash
+  sudo dnf install opencv opencv-devel
+  ```
+  - X11
+  ```bash
+  sudo dnf install libX11 libX11-devel
+  ```
+  - Boost
+  ```bash
+  sudo dnf install boost boost-devel
+  ```
+## Installation
+- Download the latest release.
+- Extract the files and run the executable.
+
+## Icons attribution
 - Icons made by [Freepik](https://www.flaticon.com/authors/freepik) from [www.flaticon.com](https://www.flaticon.com/)
 - <a href="https://www.flaticon.com/free-icons/brick" title="brick icons">Brick icons created by Freepik - Flaticon</a>
 - <a href="https://www.flaticon.com/free-icons/dna" title="dna icons">Dna icons created by Freepik - Flaticon</a>
@@ -9,3 +30,6 @@
   <a href="https://www.flaticon.com/free-icons/chicken-leg" title="chicken leg icons">Chicken leg icons created by Freepik - Flaticon</a>
 - <a href="https://www.flaticon.com/free-icons/powder" title="powder icons">Powder icons created by Smashicons - Flaticon</a>
 - <a href="https://www.flaticon.com/free-icons/energy-drink" title="energy-drink icons">Energy-drink icons created by Eucalyp - Flaticon</a>
+
+## License
+[MIT](https://choosealicense.com/licenses/mit/)
