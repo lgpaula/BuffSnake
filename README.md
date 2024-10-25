@@ -4,10 +4,19 @@ Simple snake game with a fitness focus. Can be played by a single player or mult
 ## Disclaimer
 This game has only been tested on Fedora OS, so the installation instructions provided are specific to Fedora.
 
-## Requirements
+## Install dependencies
+
+  ```bash
+  sudo dnf update
+  sudo dnf install gcc-c++
+  ```
+  - Cmake
+  ```bash
+  sudo dnf install cmake
+  ```
   - OpenCV
   ```bash
-  sudo dnf install opencv opencv-devel
+    sudo dnf install opencv opencv-devel
   ```
   - X11
   ```bash
