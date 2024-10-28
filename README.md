@@ -16,7 +16,7 @@ This game has only been tested on Fedora OS, so the installation instructions pr
   ```
   - OpenCV
   ```bash
-    sudo dnf install opencv opencv-devel
+  sudo dnf install opencv opencv-devel
   ```
   - X11
   ```bash
