@@ -9,9 +9,11 @@ on:
 jobs:
   build:
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: ${{ matrix.shell }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
         include:
           - os: ubuntu-latest
             shell: bash
@@ -40,4 +42,3 @@ jobs:
           cd build
           cmake ..
           cmake --build .
-        shell: ${{ matrix.shell }}
