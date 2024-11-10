@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ windowsCompatibility ]
   pull_request:
     branches: [ main ]
 
@@ -11,15 +11,12 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        shell: [bash, pwsh, bash]
+        os: [ubuntu-latest, windows-latest]
         include:
           - os: ubuntu-latest
             shell: bash
           - os: windows-latest
             shell: pwsh
-          - os: macos-latest
-            shell: bash
 
     steps:
       - name: Checkout code
@@ -31,21 +28,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential cmake libopencv-dev libx11-dev
 
-      - name: Install dependencies on macOS
-        if: runner.os == 'macOS'
-        run: |
-          brew update
-          brew install cmake opencv xquartz
-
       - name: Install dependencies on Windows
         if: runner.os == 'Windows'
         run: |
-          choco install -y cmake opencv
-          # Handle X11 dependency if possible
+          choco install -y cmake
+          choco install -y opencv
 
-      - name: Build project
+      - name: Configure and Build
         run: |
-          mkdir -p build
+          mkdir build
           cd build
           cmake ..
           cmake --build .

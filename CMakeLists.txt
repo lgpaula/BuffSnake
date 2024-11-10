@@ -4,7 +4,6 @@ project(snake)
 set(CMAKE_CXX_STANDARD 17)
 
 find_package(OpenCV REQUIRED)
-find_package(X11 REQUIRED)
 
 set(SOURCE_FILES
         gameModes/SinglePlayer.cpp
@@ -17,19 +16,25 @@ set(SOURCE_FILES
         consumables/Steroids.cpp
         consumables/Genetics.cpp
         consumables/DragonBalls.cpp
-        main.cpp)
+)
 
 file(COPY icons DESTINATION ${CMAKE_BINARY_DIR})
 
-# Create a library target named 'snake_lib' from the source files
+include_directories(${OpenCV_INCLUDE_DIRS})
+
 add_library(snake_lib ${SOURCE_FILES})
 
-include_directories(${OpenCV_INCLUDE_DIRS})
-include_directories(${X11_INCLUDE_DIR})
+target_link_libraries(snake_lib ${OpenCV_LIBS})
 
-add_executable(${PROJECT_NAME} ${SOURCE_FILES})
+add_executable(${PROJECT_NAME} main.cpp)
 
-# Link the 'snake_lib' library to the 'snake' executable
-target_link_libraries(${PROJECT_NAME} snake_lib ${OpenCV_LIBS} ${X11_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} snake_lib)
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${OpenCV_INCLUDE_DIRS})
+
+if(WIN32)
+elseif(UNIX)
+    find_package(X11 REQUIRED)
+    include_directories(${X11_INCLUDE_DIR})
+    target_link_libraries(${PROJECT_NAME} ${X11_LIBRARIES})
+endif()
