@@ -30,19 +30,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential cmake libopencv-dev libx11-dev
 
-      - name: Install vcpkg on Windows
+      - name: Install dependencies on Windows
         if: runner.os == 'Windows'
         run: |
-          git clone https://github.com/microsoft/vcpkg.git
-          ./vcpkg/bootstrap-vcpkg.bat
-
-      - name: Install OpenCV with vcpkg
-        if: runner.os == 'Windows'
-        run: ./vcpkg/vcpkg install opencv
+          choco install -y cmake
+          choco install -y opencv
 
       - name: Configure and Build
         run: |
           mkdir build
           cd build
-          cmake .. -DCMAKE_TOOLCHAIN_FILE=../vcpkg/scripts/buildsystems/vcpkg.cmake
+          cmake ..
           cmake --build .
